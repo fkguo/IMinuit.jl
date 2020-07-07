@@ -1,5 +1,8 @@
 module IMinuit
 
-# Write your package code here.
+export Minuit, migrad, minos, hesse
+export func_argnames
+
+include("Minuit.jl")
 
 end
