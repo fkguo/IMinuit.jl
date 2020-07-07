@@ -1,5 +1,10 @@
 using PyCall
-minuit = pyimport(:iminuit);
+
+const minuit = PyNULL()
+
+function __init__()
+    copy!(minuit, pyimport_conda("iminuit"))
+end
 
 """
     method_argnames(m::Method)
