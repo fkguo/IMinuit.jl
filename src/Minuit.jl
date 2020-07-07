@@ -1,16 +1,13 @@
 
-#
-# const mn_Minuit = PyNULL()
-# const mn_migrad = PyNULL()
-# const mn_minos = PyNULL()
-# const mn_hesse = PyNULL()
-#
-# function __init__()
-#     copy!(mn_Minuit, pyimport_conda("iminuit.Minuit", "iminuit", "conda-forge"))
-#     copy!(mn_migrad, pyimport_conda("iminuit.migrad", "iminuit", "conda-forge"))
-#     copy!(mn_minos, pyimport_conda("iminuit.minos", "iminuit", "conda-forge"))
-#     copy!(mn_hesse, pyimport_conda("iminuit.hesse", "iminuit", "conda-forge"))
-# end
+
+minuit = PyNULL()
+
+function __init__()
+    copy!(minuit, pyimport_conda("iminuit", "iminuit", "conda-forge"))
+end
+
+# struct Fit
+
 
 """
     method_argnames(m::Method)
@@ -54,25 +51,29 @@ end
     `fcn` can also be defined as `fcn(a, b, c)`.
 
 """
-function Minuit(fcn; kwds...)::PyObject
+function Minuit(fcn; kwds...)
     forced_parameters = Tuple(func_argnames(fcn)) # get the argument lists of fcn
     return minuit.Minuit(fcn; forced_parameters= forced_parameters, pedantic = false, kwds...)
 end
 
 Minuit(fcn, start; kwds...)::PyObject =  minuit.Minuit.from_array_func(fcn, start; pedantic = false, kwds...)
 
+"""
+    migrad(f::PyObject)
 
+    Wrapper of migrad
+"""
 function migrad(f::PyObject; ncall = 1000, resume = true, nsplit = 1, precision = nothing)
     return pycall(f.migrad, PyObject, ncall, resume, nsplit, precision)
 end
 
-migrad(f::PyObject) = pycall(f.migrad, PyObject)
+# migrad(f::PyObject) = pycall(f.migrad, PyObject)
 
 hesse(f::PyObject; maxcall = 0) = pycall(f.hesse, PyObject, maxcall)
-hesse(f::PyObject) = pycall(f.hesse, PyObject)
+# hesse(f::PyObject) = pycall(f.hesse, PyObject)
 
 function minos(f::PyObject; var = nothing, sigma = 1, maxcall = 0)
     return pycall(f.minos, PyObject, var, sigma, maxcall)
 end
 
-minos(f::PyObject) = pycall(f.minos, PyObject)
+# minos(f::PyObject) = pycall(f.minos, PyObject)
