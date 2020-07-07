@@ -1,10 +1,16 @@
-using PyCall
 
-const minuit = PyNULL()
-
-function __init__()
-    copy!(minuit, pyimport_conda("iminuit"))
-end
+#
+# const mn_Minuit = PyNULL()
+# const mn_migrad = PyNULL()
+# const mn_minos = PyNULL()
+# const mn_hesse = PyNULL()
+#
+# function __init__()
+#     copy!(mn_Minuit, pyimport_conda("iminuit.Minuit", "iminuit", "conda-forge"))
+#     copy!(mn_migrad, pyimport_conda("iminuit.migrad", "iminuit", "conda-forge"))
+#     copy!(mn_minos, pyimport_conda("iminuit.minos", "iminuit", "conda-forge"))
+#     copy!(mn_hesse, pyimport_conda("iminuit.hesse", "iminuit", "conda-forge"))
+# end
 
 """
     method_argnames(m::Method)
