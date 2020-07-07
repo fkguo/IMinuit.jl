@@ -29,7 +29,7 @@ end
     Minuit(fcn, start; kwds...)
 
     Wrapper of the `iminuit` function `Minuit`.
-    `fcn` is the function to be minized.
+    `fcn` is the function to be minimized.
     `start`: an array/tuple of the starting values of the parameters.
     `kwds` is the list of keywrod arguments of `Minuit`. For more information, refer to the `iminuit` manual.
 
