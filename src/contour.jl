@@ -24,7 +24,8 @@ function get_contours(fit::Fit, χsq, parameters_combination::Vector{Int}; npts:
     args = func_argnames(χsq)
     @views for i in 1: length(args)    # reset the limits of parameters to be the bounds from minos
         kwdarg[Symbol(:limit_, args[i])] = get(fit.args, i-1) .+
-             (fit.merrors[String(args[i]), -1], fit.merrors[String(args[i]), 1])
+            (fit.merrors[String(args[i])][3], fit.merrors[String(args[i])][4])
+             # (fit.merrors[String(args[i]), -1], fit.merrors[String(args[i]), 1])
     end
 
     container = Vector{Vector{Float64}}()
@@ -104,7 +105,8 @@ function get_contours_given_parameter(fit::Fit, χsq, para::T, range) where {T <
     args = func_argnames(χsq)
     @views for i in 1: length(args)    # reset the limits of parameters to be the bounds from minos
         kwdarg[Symbol(:limit_, args[i])] = get(fit.args, i-1) .+
-             (fit.merrors[String(args[i]), -1], fit.merrors[String(args[i]), 1])
+             (fit.merrors[String(args[i])][3], fit.merrors[String(args[i])][4])
+              # (fit.merrors[String(args[i]), -1], fit.merrors[String(args[i]), 1])
     end
 
     container = Vector{Vector{Float64}}()
@@ -150,7 +152,8 @@ function get_contours_samples(fit::Fit, χsq, paras, ranges; nsamples = 100, MNb
     if MNbounds
         @views for i in 1: length(args)    # reset the limits of parameters to be the bounds from minos
             kwdarg[Symbol(:limit_, args[i])] = get(fit.args, i-1) .+
-                 (fit.merrors[String(args[i]), -1], fit.merrors[String(args[i]), 1])
+                 (fit.merrors[String(args[i])][3], fit.merrors[String(args[i])][4])
+                  # (fit.merrors[String(args[i]), -1], fit.merrors[String(args[i]), 1])
         end
     end
 
