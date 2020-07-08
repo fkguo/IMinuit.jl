@@ -7,8 +7,13 @@ import PyCall: hasproperty # Base.hasproperty in Julia 1.2
 import Base: convert, ==, isequal, hash,  haskey
 # minuit = pyimport(:iminuit)
 
+using ForwardDiff: gradient
+
 export Minuit, migrad, minos, hesse, matrix
-export Fit, func_argnames, Data
+export Fit, func_argnames, Data, chisq, plt_data, plt_best
+export gradient
+export get_contours, get_contours_all, contour_df, get_contours_given_parameter
+export contour_df_given_parameter, get_contours_samples, contour_df_samples
 
 # copied from PyPlot.jl
 # that lazily looks up help from a PyObject via zero or more keys.
@@ -69,7 +74,6 @@ end
 ###########################################################################
 
 include("init.jl")
-include("Data.jl")
 
 ###########################################################################
 
@@ -160,6 +164,13 @@ for f in [:migrad, :minos, :hesse, :matrix]
         return pycall(mMinuit.$sf, PyAny, args...; kws...)
     end
 end
+
+#########################################################################
+
+include("Data.jl")
+include("contour.jl")
+
+#########################################################################
 
 
 end
