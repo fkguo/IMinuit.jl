@@ -56,7 +56,7 @@ function method_argnames(m::Method)
 end
 
 """
-    func_argnames(m::Method)
+    func_argnames(f::Function)
 
     Extracting the argument names of a function as an array.
 """
@@ -110,19 +110,19 @@ end
     Minuit(fcn, start; kwds...)
 
     Wrapper of the `iminuit` function `Minuit`.
-    `fcn` is the function to be minimized.
+    `fcn` is the function to be optimized.
     `start`: an array/tuple of the starting values of the parameters.
     `kwds` is the list of keywrod arguments of `Minuit`. For more information, refer to the `iminuit` manual.
 
     Example:
 
-    `Minuit(fcn, [1, 1, 0]; name = ["a", "b", "c"], error = 0.1*ones(3), fix_a = true, limit_b = (0, 50) )`
+    `Minuit(fcn, [1,  0]; name = ["a", "b], error = 0.1*ones(2), fix_a = true, limit_b = (0, 50) )`
     where the parameters are collected in an array `par` which is the argument of `fcn(par)`. In this case,
     one can use external code (e.g., `using ForwardDiff: gradient`) to compute the gradient as `gradfun(par) = gradient(fcn, par)`, and include `grad = gradfun` as a keyword argument.
 
 
-    If `fcn` is defined as `fcn(a, b, c)`, then the starting values need to be
-    set as `Minuit(fcn, a = 1, b = 1, c = 0)`.
+    If `fcn` is defined as `fcn(a, b)`, then the starting values need to be
+    set as `Minuit(fcn, a = 1, b = 0)`.
 
     From `iminuit`:
 
