@@ -1,4 +1,5 @@
 using DataFrames: DataFrame
+using PyPlot: plt
 
 """
     Data(x::T, y::T, err::T) where {T<:Vector{Real}}
@@ -29,18 +30,18 @@ Data(df::DataFrame) = Data(df[:,1], df[:,2], df[:,3])
 Make a errorbar plot of the data
 """
 function plt_data(data::Data; xlab = "x", ylab = "y")
-    subplots(figsize = (6, 4))
-    errorbar(data.x, data.y, data.err, fmt = "o", label = "Data" )
-    legend()
-    xlabel(xlab); ylabel(ylab)
-    minorticks_on(); tick_params(which="both",direction="in", right="on", top="on")
-    grid(which="major", axis="both", alpha=0.25)
+    fig, ax = plt.subplots(figsize = (6, 4))
+    ax.errorbar(data.x, data.y, data.err, fmt = "o", label = "Data" )
+    ax.legend()
+    ax.set_xlabel(xlab); ax.set_ylabel(ylab)
+    ax.minorticks_on(); ax.tick_params(which="both",direction="in", right="on", top="on")
+    ax.grid(which="major", axis="both", alpha=0.25)
 end
 
 
 
 """
-    chisq(fun, data::Data, par; fitrange = ())
+    chisq(dist::Function, data::Data, par; fitrange = ())
 
 defines the χ² function: `fun` the function to be fitted to the data given by `data`.
 The parameters are collected into `par`, given as an array or a tuple.
@@ -48,18 +49,25 @@ The parameters are collected into `par`, given as an array or a tuple.
 `fitrange`: default to the whole data set; may given as, e.g., `2:10`,
 which means only fitting to the 2nd to the 10th data points
 """
-function chisq(fun, data::Data, par; fitrange = ())
+function chisq(dist::Function, data::Data, par::Vector; fitrange = ())
     fitrange = (isempty(fitrange) && 1:data.ndata)
     res = 0.0
     @simd for i = fitrange
-        @inbounds res += ( (data.y[i]- fun(data.x[i], par))/data.err[i] )^2
+        @inbounds res += ( (data.y[i]- dist(data.x[i], par))/data.err[i] )^2
+    end
+    return res
+end
+function chisq(dist::Function, data::Data, par::Tuple; fitrange = ())
+    fitrange = (isempty(fitrange) && 1:data.ndata)
+    res = 0.0
+    @simd for i = fitrange
+        @inbounds res += ( (data.y[i]- dist(data.x[i], par))/data.err[i] )^2
     end
     return res
 end
 
-
 """
-    plt_best(fit::Fit, data::Data; xrange = (), xlab = "x", ylab = "y", npt = 100)`
+    plt_best(dist::Function, fit::Fit, data::Data; xrange = (), xlab = "x", ylab = "y", npt = 100)`
 
 for plotting the comparison of the result from fit with the data.
 
@@ -67,8 +75,10 @@ for plotting the comparison of the result from fit with the data.
 
 `npt`: number of points computed for the best-fit curve, default = 100.
 """
-function plt_best(fit::Fit, data::Data; xrange = (), xlab = "x", ylab = "y", npt = 100)
+function plt_best(dist::Function, fit::Fit, data::Data; xrange = (), xlab = "x", ylab = "y", npt = 100)
     paras1 = convert(Array, fit.args)
+
+    dis(x) = (length(func_argnames(dist)) > 2 ? dist(x, paras1...) : dist(x, paras1))
 
     fig, ax = plt.subplots(figsize=(6,4))
     ax.minorticks_on(); ax.tick_params(which="both",direction="in", right="on", top="on")
@@ -78,9 +88,9 @@ function plt_best(fit::Fit, data::Data; xrange = (), xlab = "x", ylab = "y", npt
     xrange = (isempty(xrange) && data.x)
     wv = LinRange(xrange[1], xrange[end], npt)
     ax.errorbar(data.x, data.y, data.err, c = "C0", fmt="o", label = "Data")
-    ax.plot(wv, dist1.(wv, Ref(paras1)), c = "C3", "-", label = "Best fit", lw=1.25)
+    ax.plot(wv, dis.(wv), c = "C3", "-", label = "Best fit", lw=1.25)
     ax.legend();
 
     ax.set_xlim(wv[1], wv[end]); #ax.set_ylim(0, )
-    grid(true, alpha = 0.3)
+    ax.grid(true, alpha = 0.3)
 end
