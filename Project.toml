@@ -7,6 +7,7 @@ version = "0.1.0"
 PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
 Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee"
 
 [compat]
 PyCall = "1"
