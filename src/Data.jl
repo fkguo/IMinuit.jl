@@ -11,11 +11,11 @@ This defines a type for data with three columns:` x, y, err`; `ndata` is the num
 Only symmetric errors (of `y`) are supported.
 """
 struct Data
-    x::Vector{Float64}
-    y::Vector{Float64}
-    err::Vector{Float64}
+    x::Vector{Real}
+    y::Vector{Real}
+    err::Vector{Real}
     ndata::Int
-    function Data(x::T, y::T, err::T) where {T<:Vector{Real}}
+    function Data(x::Vector{T}, y::Vector{T}, err::Vector{T}) where {T<:Real}
         ndata = length(x)
         new(x, y, err, ndata)
     end
