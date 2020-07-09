@@ -27,7 +27,7 @@ Data(df::DataFrame) = Data(df[:,1], df[:,2], df[:,3])
 """
     plt_data(data::Data; xlab = "x", ylab = "y", legend = :topleft)
 
-Make a errorbar plot of the data
+Make an errorbar plot of the data
 """
 function plt_data(data::Data; xlab = "x", ylab = "y", legend = :best)
     scatter(data.x, data.y, yerror = data.err, label = "Data", xlab = xlab, ylab = ylab, legend = legend)
@@ -62,7 +62,7 @@ function chisq(dist::Function, data::Data, par::Tuple; fitrange = ())
 end
 
 """
-    plt_best(dist::Function, fit::Fit, data::Data; npts = 100, xrange = (), xlab = "x", ylab = "y", legend = :bes)`
+    plt_best(dist::Function, fit::Fit, data::Data; npts = 100, xrange = (), xlab = "x", ylab = "y", legend = :best)`
 
 for plotting the comparison of the result from fit with the data.
 
