@@ -1,7 +1,7 @@
 __precompile__() # this module is safe to precompile
 module IMinuit
 
-using PyCall
+using PyCall: PyObject, pycall, PyNULL, PyAny, pyimport_conda, pyimport
 import PyCall: PyObject, pycall
 import PyCall: hasproperty # Base.hasproperty in Julia 1.2
 import Base: convert, ==, isequal, hash,  haskey
