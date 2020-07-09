@@ -1,5 +1,6 @@
 using DataFrames: DataFrame
-using PyPlot: plt
+using Plots
+default(framestyle = :box, minorticks = true, fg_legend = cgrad(alpha = 0.3))
 
 """
     Data(x::T, y::T, err::T) where {T<:Vector{Real}}
@@ -29,13 +30,8 @@ Data(df::DataFrame) = Data(df[:,1], df[:,2], df[:,3])
 
 Make a errorbar plot of the data
 """
-function plt_data(data::Data; xlab = "x", ylab = "y")
-    fig, ax = plt.subplots(figsize = (6, 4))
-    ax.errorbar(data.x, data.y, data.err, fmt = "o", label = "Data" )
-    ax.legend()
-    ax.set_xlabel(xlab); ax.set_ylabel(ylab)
-    ax.minorticks_on(); ax.tick_params(which="both",direction="in", right="on", top="on")
-    ax.grid(which="major", axis="both", alpha=0.25)
+function plt_data1(data::Data; xlab = "x", ylab = "y", legend = :topleft)
+    scatter(data.x, data.y, yerror = data.err, label = "Data", xlab = xlab, ylab = ylab, legend = legend)
 end
 
 
