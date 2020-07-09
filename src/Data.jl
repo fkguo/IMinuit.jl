@@ -1,5 +1,5 @@
 using DataFrames: DataFrame
-using PyPlot: plt
+using Plots: scatter, plot!
 
 """
     Data(x::T, y::T, err::T) where {T<:Vector{Real}}
@@ -25,17 +25,12 @@ end
 Data(df::DataFrame) = Data(df[:,1], df[:,2], df[:,3])
 
 """
-    plt_data(data::Data; xlab = "x", ylab = "y")
+    plt_data(data::Data; xlab = "x", ylab = "y", legend = :topleft)
 
 Make a errorbar plot of the data
 """
-function plt_data(data::Data; xlab = "x", ylab = "y")
-    fig, ax = plt.subplots(figsize = (6, 4))
-    ax.errorbar(data.x, data.y, data.err, fmt = "o", label = "Data" )
-    ax.legend()
-    ax.set_xlabel(xlab); ax.set_ylabel(ylab)
-    ax.minorticks_on(); ax.tick_params(which="both",direction="in", right="on", top="on")
-    ax.grid(which="major", axis="both", alpha=0.25)
+function plt_data(data::Data; xlab = "x", ylab = "y", legend = :best)
+    scatter(data.x, data.y, yerror = data.err, label = "Data", xlab = xlab, ylab = ylab, legend = legend)
 end
 
 
@@ -67,30 +62,21 @@ function chisq(dist::Function, data::Data, par::Tuple; fitrange = ())
 end
 
 """
-    plt_best(dist::Function, fit::Fit, data::Data; xrange = (), xlab = "x", ylab = "y", npt = 100)`
+    plt_best(dist::Function, fit::Fit, data::Data; npts = 100, xrange = (), xlab = "x", ylab = "y", legend = :bes)`
 
 for plotting the comparison of the result from fit with the data.
 
 `xrange`: range of `x` for plotting the best fit; if not given then use the range of `data.x`
 
-`npt`: number of points computed for the best-fit curve, default = 100.
+`npts`: number of points computed for the best-fit curve, default = 100.
 """
-function plt_best(dist::Function, fit::Fit, data::Data; xrange = (), xlab = "x", ylab = "y", npt = 100)
+function plt_best(dist::Function, fit::Fit, data::Data; npts = 100, xrange = (), xlab = "x", ylab = "y", legend = :best)
     paras1 = convert(Array, fit.args)
 
     dis(x) = (length(func_argnames(dist)) > 2 ? dist(x, paras1...) : dist(x, paras1))
 
-    fig, ax = plt.subplots(figsize=(6,4))
-    ax.minorticks_on(); ax.tick_params(which="both",direction="in", right="on", top="on")
-    ax.set_xlabel(xlab)
-    ax.set_ylabel(ylab)
-
-    xrange = (isempty(xrange) && data.x)
-    wv = LinRange(xrange[1], xrange[end], npt)
-    ax.errorbar(data.x, data.y, data.err, c = "C0", fmt="o", label = "Data")
-    ax.plot(wv, dis.(wv), c = "C3", "-", label = "Best fit", lw=1.25)
-    ax.legend();
-
-    ax.set_xlim(wv[1], wv[end]); #ax.set_ylim(0, )
-    ax.grid(true, alpha = 0.3)
+    xrange = (isempty(xrange) ? data.x : xrange)
+    wv = LinRange(xrange[1], xrange[end], npts)
+    scatter(data.x, data.y, yerror = data.err, label = "Data", xlab = xlab, ylab = ylab, legend = legend)
+    plot!(wv, dis.(wv), label = "Best fit", lw=1.5)
 end
