@@ -21,8 +21,8 @@ Functions defined:
 
 Example:
 ```
-    fcn(x) = x[1]^2 + (x[2]-1)^2
-    Minuit(fcn, [1, 0]; name = ["a", "b"], error = 0.1*ones(2), fix_a = true, limit_b = (0, 50) )
+fcn(x) = x[1]^2 + (x[2]-1)^2
+Minuit(fcn, [1, 0]; name = ["a", "b"], error = 0.1*ones(2), fix_a = true, limit_b = (0, 50) )
 ```
 where the parameters are collected in an array `par` which is the argument of `fcn(par)`. In this case,
 one can use external code (e.g., `using ForwardDiff: gradient`) to compute the gradient as `gradfun(par) = gradient(fcn, par)`, and include `grad = gradfun` as a keyword argument.
@@ -36,8 +36,8 @@ If `fcn` is defined as `fcn(a, b)`, then the starting values need to be set as `
 `func_argnames(f::Function)`:  Extracting the argument names of a function as an array.
 
 ```
-    Data(x::T, y::T, err::T) where {T<:Vector{Real}}
-    Data(df::DataFrame)
+Data(x::T, y::T, err::T) where {T<:Vector{Real}}
+Data(df::DataFrame)
 ```
 Fields: `x, y, err, ndata`. This defines a type for data with three columns:` x, y, err`; `ndata` is the number of data rows.
 
@@ -54,7 +54,7 @@ which means only fitting to the 2nd to the 10th data points
 produces an errorbar plot of the data.
 
 ```
-    plt_best(dist::Function, fit::Fit, data::Data; npts = 100, xrange = (), xlab = "x", ylab = "y", legend = :best)`
+plt_best(dist::Function, fit::Fit, data::Data; npts = 100, xrange = (), xlab = "x", ylab = "y", legend = :best)`
 ```
 for plotting the comparison of the result from fit with the data.
 `xrange`: range of `x` for plotting the best fit; if not given then use the range of `data.x`
@@ -65,7 +65,7 @@ for plotting the comparison of the result from fit with the data.
 So far, the following functions work only for the `χsq` taking all parameters as individual variables (i.e., not in an array).
 
 ```
-    get_contours_all(fit::Fit, χsq; npts=20, limits=true, sigma = 1.0)
+get_contours_all(fit::Fit, χsq; npts=20, limits=true, sigma = 1.0)
 ```
 For a given fit `fit` and the χ² function `χsq`, gives a list of parameters sets which are at the edge of
 1σ `MINOS` contours for all parameters combinations. The case of `limits` being `true` runs only once.
@@ -82,8 +82,8 @@ give parameter sets in 1σ for a given parameter constrained in a range (the lat
 
 
 ```
-    get_contours_samples(fit, χsq, paras, ranges; nsamples = 100, MNbounds = true)
-    contour_df_samples(fit::Fit, χsq, paras, ranges; nsamples = 100, MNbounds=true)
+get_contours_samples(fit, χsq, paras, ranges; nsamples = 100, MNbounds = true)
+contour_df_samples(fit::Fit, χsq, paras, ranges; nsamples = 100, MNbounds=true)
 ```
 gives 1σ parameter sets as an `Array` (the latter returns a `DataFrame`) for given parameters constrained in `ranges`:
 * if `paras` is a single parameter, then take equally spaced `nsamples` in `ranges` given in the form of `(min, max)`;
