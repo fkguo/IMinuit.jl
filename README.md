@@ -6,7 +6,11 @@
 
 Julia wrapper of the Python package [`iminuit`](https://github.com/scikit-hep/iminuit). The `minuit` object in `iminuit` is defined as a mutable struct `Fit`.
 
+Install by `]add https://github.com/fkguo/IMinuit.jl`
+
 Functions defined:
+
+## Functions in `iminuit`
 
 `Minuit(fcn; kwds...)`, `Minuit(fcn, start; kwds...)`
 
@@ -27,6 +31,8 @@ If `fcn` is defined as `fcn(a, b)`, then the starting values need to be set as `
 
 `migrad, minos, hesse, matrix`: wrappers of `iminuit.Minuit.migrad`, `iminuit.Minuit.minos`, `iminuit.Minuit.hesse`, `iminuit.Minuit.matrix`
 
+## Some useful functions
+
 `func_argnames(f::Function)`:  Extracting the argument names of a function as an array.
 
 ```
@@ -34,3 +40,54 @@ If `fcn` is defined as `fcn(a, b)`, then the starting values need to be set as `
     Data(df::DataFrame)
 ```
 Fields: `x, y, err, ndata`. This defines a type for data with three columns:` x, y, err`; `ndata` is the number of data rows.
+
+```
+chisq(dist::Function, data::Data, par; fitrange = ())
+```
+defines the χ² function: `fun` the function to be fitted to the data given by `data`.
+The parameters are collected into `par`, given as an array or a tuple.
+`fitrange`: default to the whole data set; may given as, e.g., `2:10`,
+which means only fitting to the 2nd to the 10th data points
+
+
+`plt_data(data::Data; xlab = "x", ylab = "y", legend = :topleft)`
+produces an errorbar plot of the data.
+
+```
+    plt_best(dist::Function, fit::Fit, data::Data; npts = 100, xrange = (), xlab = "x", ylab = "y", legend = :best)`
+```
+for plotting the comparison of the result from fit with the data.
+`xrange`: range of `x` for plotting the best fit; if not given then use the range of `data.x`
+`npts`: number of points computed for the best-fit curve, default = 100.
+
+### Additional functions for error analysis
+
+So far, the following functions work only for the `χsq` taking all parameters as individual variables (i.e., not in an array).
+
+```
+    get_contours_all(fit::Fit, χsq; npts=20, limits=true, sigma = 1.0)
+```
+For a given fit `fit` and the χ² function `χsq`, gives a list of parameters sets which are at the edge of
+1σ `MINOS` contours for all parameters combinations. The case of `limits` being `true` runs only once.
+
+
+`contour_df(fit::Fit, χsq; npts=20, limits=true, sigma = 1.0)` gives such parameters in the form of a `DataFrame`.
+
+```
+get_contours_given_parameter(fit::Fit, χsq, para::T, range) where {T <: Union{Symbol, String}}
+contour_df_given_parameter(fit, χsq, para::T, range; limits = true) where {T <: Union{Symbol, String}}
+```
+give parameter sets in 1σ for a given parameter constrained in a range (the latter returns a `DataFrame`).
+
+
+
+```
+    get_contours_samples(fit, χsq, paras, ranges; nsamples = 100, MNbounds = true)
+    contour_df_samples(fit::Fit, χsq, paras, ranges; nsamples = 100, MNbounds=true)
+```
+gives 1σ parameter sets as an `Array` (the latter returns a `DataFrame`) for given parameters constrained in `ranges`:
+* if `paras` is a single parameter, then take equally spaced `nsamples` in `ranges` given in the form of `(min, max)`;
+* if `paras` contain more parameters, then `paras` should be of the form `(:para1, :para2)`, `ranges` should be of the form `((min1, max1), (min2, max2))`;
+* `paras` can be more than 2. Values for the parameters given in `paras` are randomly sampled in the given `ranges`.
+* if `MNbounds` is true, then constrain the parameters in the range provided by `MINOS` no matter whether that is valid or not (to be improved by checking the validity)
+* if `igrad` is true, then use `ForwardDiff.gradient` to compute the gradient.
