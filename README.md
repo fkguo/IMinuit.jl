@@ -2,7 +2,7 @@
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://fkguo.github.io/IMinuit.jl/stable)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://fkguo.github.io/IMinuit.jl/dev)
-<!-- [![Build Status](https://github.com/fkguo/IMinuit.jl/workflows/CI/badge.svg)](https://github.com/fkguo/IMinuit.jl/actions) -->
+[![Build Status](https://github.com/fkguo/IMinuit.jl/workflows/CI/badge.svg)](https://github.com/fkguo/IMinuit.jl/actions)
 
 Julia wrapper of the Python package [`iminuit`](https://github.com/scikit-hep/iminuit). The `minuit` object in `iminuit` is defined as an `AbstractFit`:
 if using array parameters, then `ArrayFit`;
@@ -75,7 +75,7 @@ for plotting the comparison of the result from fit with the data.
 
 ### Additional functions for error analysis
 
-So far, the following functions work only for the `χsq` taking all parameters as individual variables (i.e., not in an array).
+The following functions could be useful if `MINOS` fails to parameter uncertainties.
 
 ```
 get_contours(fit::AbstractFit, χsq, parameters_combination::Vector{Int}; npts::Int=20, limits=true, sigma = 1.0)
