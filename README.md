@@ -58,7 +58,7 @@ chisq(dist::Function, data::Data, par; fitrange = ())
 ```
 defines the χ² function: `fun` the function to be fitted to the data given by `data`.
 The parameters are collected into `par`, given as an array or a tuple.
-* `dist` should be defined as `dist(x, par)` or like `dist(x, par1, par2, par3)`.
+* `dist` should be defined as `dist(x, par)`.
 * `fitrange`: default to the whole data set; may given as, e.g., `2:10`,
 which means only fitting to the 2nd to the 10th data points
 
@@ -69,26 +69,26 @@ produces an errorbar plot of the data.
 ```
 plt_best(dist::Function, fit::AbstractFit, data::Data; npts = 100, xrange = (), xlab = "x", ylab = "y", legend = :best)`
 ```
-for plotting the comparison of the result from fit with the data.
+for plotting the comparison of the best-fit result with the data.
 * `xrange`: range of `x` for plotting the best fit; if not given then use the range of `data.x`
 * `npts`: number of points computed for the best-fit curve, default = 100.
 
 ### Additional functions for error analysis
 
-The following functions could be useful if `MINOS` fails to parameter uncertainties.
+The following functions could be useful if `MINOS` fails to produce parameter uncertainties.
 
 ```
 get_contours(fit::AbstractFit, χsq, parameters_combination::Vector{Int}; npts::Int=20, limits=true, sigma = 1.0)
 ```
-For a given fit `fit` and the χ² function `χsq`, gives an array of parameter arrays,
+For a given fit `fit` and the χ² function `χsq`, gives a list of parameter arrays,
 with each array corresponding to a set of parameters obtained from calculating the `MINOS` 1σ contour
 (try to find `npts` points in the contour) for the two parameters in `parameters_combination`.
 
 `parameters_combination` is an `Int` array of the numbers of that two parameters, e.g. it is `[1, 2]` for the first
 two parameters and `[2, 3]` or the second and third parameters.
 
-If `limits` is `true`, then fix one parameter to its bounds from `MINOS` of the best fit and get the values for
-the other parameters; this runs over all parameters.
+If `limits` is `true`, then fix one parameter to its bounds from `MINOS` of the best fit and get the values for the other parameters using `MIGRAD`;
+this runs over all parameters.
 
 
 ```
@@ -109,7 +109,7 @@ If no user-defined names have been given to the parameters, `para` is then "x0" 
 "x1" for the 2nd parameter (default names in `iminuit`), ...
 
 For using array parameters, if no user-defined names have been given to the parameters,
-`paras` should be given such that "x0" for the 1st parameter, "x1" for the 2nd parameter, ...
+`paras` should be given such that `"x0"` or `:x0` for the 1st parameter, `"x1"` or `:x1` for the 2nd parameter, ...
 
 
 ```
@@ -118,9 +118,9 @@ contour_df_samples(fit::Fit, χsq, paras, ranges; nsamples = 100, MNbounds=true)
 ```
 gives 1σ parameter sets as an `Array` (the latter returns a `DataFrame`) for given parameters constrained in `ranges`:
 * if `paras` is a single parameter, then take equally spaced `nsamples` in `ranges` given in the form of `(min, max)`;
-* if `paras` contain more parameters, then `paras` should be of the form `(:para1, :para2)`, `ranges` should be of the form `((min1, max1), (min2, max2))`;
-* `paras` can be more than 2. Values for the parameters given in `paras` are randomly sampled in the given `ranges`.
+* if `paras` contain more (≧2) parameters, then `paras` should be of the form `(:para1, :para2)`, `ranges` should be of the form `((min1, max1), (min2, max2))`,
+and values for the parameters given in `paras` are randomly sampled in the given `ranges`;
 * if `MNbounds` is true, then constrain the parameters in the range provided by `MINOS` no matter whether that is valid or not (to be improved by checking the validity)
 * if `igrad` is true, then use `ForwardDiff.gradient` to compute the gradient.
 * For using array parameters, if no user-defined names have been given to the parameters,
-`paras` should be given such that "x0" for the 1st parameter, "x1" for the 2nd parameter, ...
+`paras` should be given such that `"x0"` or `:x0` for the 1st parameter, `"x1"` or `:x1` for the 2nd parameter, ...
