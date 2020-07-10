@@ -41,26 +41,24 @@ end
 
 defines the χ² function: `fun` the function to be fitted to the data given by `data`.
 The parameters are collected into `par`, given as an array or a tuple.
-`dist` should be defined as `dist(x, par)` or like `dist(x, par1, par2, par3)`.
 
 `fitrange`: default to the whole data set; may given as, e.g., `2:10`,
-which means only fitting to the 2nd to the 10th data points
+which means only fitting to the 2nd to the 10th data points.
 """
 function chisq(dist::Function, data::Data, par::AbstractVector; fitrange = ())
     fitrange = (isempty(fitrange) && 1:data.ndata)
-    __dist__(x, par) = (length(func_argnames(dist)) > 2 ? dist(x, par...) : dist(x, par) )
+    # __dist__(x, par) = (length(func_argnames(dist)) > 2 ? dist(x, par...) : dist(x, par) )
     res = 0.0
     @simd for i = fitrange
-        @inbounds res += ( (data.y[i]- __dist__(data.x[i], par))/data.err[i] )^2
+        @inbounds res += ( (data.y[i]- dist(data.x[i], par))/data.err[i] )^2
     end
     return res
 end
 function chisq(dist::Function, data::Data, par::Tuple; fitrange = ())
     fitrange = (isempty(fitrange) && 1:data.ndata)
-    __dist__(x, par) = (length(func_argnames(dist)) > 2 ? dist(x, par...) : dist(x, par) )
     res = 0.0
     @simd for i = fitrange
-        @inbounds res += ( (data.y[i]- __dist__(data.x[i], par))/data.err[i] )^2
+        @inbounds res += ( (data.y[i]- dist(data.x[i], par))/data.err[i] )^2
     end
     return res
 end
