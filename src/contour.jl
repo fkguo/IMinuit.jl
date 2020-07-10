@@ -180,8 +180,8 @@ end
     get_contours_given_parameter(fit::ArrayFit, χsq, para::T, range) where {T <: Union{Symbol, String}}
 
 gives parameter sets in one sigma for a given parameter constrained in a range.
-If no user-defined names have been given to the parameters, `para` is then "x0" for the 1st parameter,
-"x1" for the 2nd parameter, ...
+If no user-defined names have been given to the parameters, `para` is then `"x0"`
+or `:x0` for the 1st parameter, `"x1"` or `:x1` for the 2nd parameter, ...
 """
 function get_contours_given_parameter(fit::ArrayFit, χsq, para::T, range) where {T <: Union{Symbol, String}}
     fit.migrad_ok() || fit.migrad();        # if migrad has not been run then run it first
@@ -230,15 +230,14 @@ end
 """
     get_contours_samples(fit::AbstractFit, χsq, paras, ranges; nsamples = 100, MNbounds = true)
 
-gives \$1\\sigma\$ parameter sets as an `Array` for given parameters constrained in `ranges`:
+gives 1σ parameter sets as an `Array` (the latter returns a `DataFrame`) for given parameters constrained in `ranges`:
 * if `paras` is a single parameter, then take equally spaced `nsamples` in `ranges` given in the form of `(min, max)`;
-* if `paras` contain more parameters, then `paras` should be of the form `(:para1, :para2)`, `ranges` should be of the form `((min1, max1), (min2, max2))`;
-* `paras` can be more than 2. Values for the parameters given in `paras` are randomly sampled in the given `ranges`.
+* if `paras` contain more (≧2) parameters, then `paras` should be of the form `(:para1, :para2)`, `ranges` should be of the form `((min1, max1), (min2, max2))`,
+and values for the parameters given in `paras` are randomly sampled in the given `ranges`;
 * if `MNbounds` is true, then constrain the parameters in the range provided by `MINOS` no matter whether that is valid or not (to be improved by checking the validity)
-* if `igrad` is true, then use ForwardDiff.gradient to compute the gradient.
-
-For using array parameters, if no user-defined names have been given to the parameters,
-`paras` should be given such that "x0" for the 1st parameter, "x1" for the 2nd parameter, ...
+* if `igrad` is true, then use `ForwardDiff.gradient` to compute the gradient.
+* For using array parameters, if no user-defined names have been given to the parameters,
+`paras` should be given such that `"x0"` or `:x0` for the 1st parameter, `"x1"` or `:x1` for the 2nd parameter, ...
 """
 function get_contours_samples(fit::Fit, χsq, paras, ranges; nsamples = 100, MNbounds = true, igrad = false)
     fit.migrad_ok() || fit.migrad();        # if migrad has not been run then run it first
