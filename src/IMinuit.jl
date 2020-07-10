@@ -9,7 +9,7 @@ import Base: convert, ==, isequal, hash,  haskey
 
 using ForwardDiff: gradient
 
-export Minuit, migrad, minos, hesse, matrix
+export Minuit, migrad, minos, hesse, matrix, minuit, mMinuit
 export AbstractFit, Fit, ArrayFit, func_argnames, Data, chisq, plt_data, plt_best
 export gradient
 export get_contours, get_contours_all, contour_df, get_contours_given_parameter
