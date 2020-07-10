@@ -4,7 +4,9 @@
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://fkguo.github.io/IMinuit.jl/dev)
 <!-- [![Build Status](https://github.com/fkguo/IMinuit.jl/workflows/CI/badge.svg)](https://github.com/fkguo/IMinuit.jl/actions) -->
 
-Julia wrapper of the Python package [`iminuit`](https://github.com/scikit-hep/iminuit). The `minuit` object in `iminuit` is defined as a mutable struct `Fit`.
+Julia wrapper of the Python package [`iminuit`](https://github.com/scikit-hep/iminuit). The `minuit` object in `iminuit` is defined as an `AbstractFit`:
+if using array parameters, then `ArrayFit`;
+if using individual parameters, then `Fit`.
 
 Install by `]add https://github.com/fkguo/IMinuit.jl`
 
@@ -12,24 +14,33 @@ Functions defined:
 
 ## Functions in `iminuit`
 
-`Minuit(fcn; kwds...)`, `Minuit(fcn, start; kwds...)`
+```
+Minuit(fcn; kwds...)::Fit
+Minuit(fcn, start; kwds...)::ArrayFit
+```
 
  Wrapper of the `iminuit` function `Minuit`.
  `fcn` is the function to be optimized.
  `start`: an array/tuple of the starting values of the parameters.
  `kwds` is the list of keywrod arguments of `Minuit`. For more information, refer to the `iminuit` manual.
+ The `Fit` one, for which `fcn` takes individual parameters as variables,  is generally
+ faster than the `ArrayFit` one, for which `fcn` takes array parameters.
 
 Example:
 ```
 fcn(x) = x[1]^2 + (x[2]-1)^2
-Minuit(fcn, [1, 0]; name = ["a", "b"], error = 0.1*ones(2), fix_a = true, limit_b = (0, 50) )
+m = Minuit(fcn, [1, 0]; name = ["a", "b"], error = 0.1*ones(2), fix_a = true, limit_b = (0, 50) )
 ```
-where the parameters are collected in an array `par` which is the argument of `fcn(par)`. In this case,
-one can use external code (e.g., `using ForwardDiff: gradient`) to compute the gradient as `gradfun(par) = gradient(fcn, par)`, and include `grad = gradfun` as a keyword argument.
+where the parameters are collected in an array `par` which is the argument of `fcn(par)`,
+and `typeof(m) = ArrayFit`. In this case, one can use external code to compute the gradient as
+`gradfun(par) = gradient(fcn, par)` (the exported `gradient` function is from `ForwardDiff`),
+and include `grad = gradfun` as a keyword argument.
 
-If `fcn` is defined as `fcn(a, b)`, then the starting values need to be set as `Minuit(fcn, a = 1, b = 0)`.
+If `fcn` is defined as `fcn(a, b)`, then the starting values need to be set as
+`Minuit(fcn, a = 1, b = 0)`.
 
-`migrad, minos, hesse, matrix`: wrappers of `iminuit.Minuit.migrad`, `iminuit.Minuit.minos`, `iminuit.Minuit.hesse`, `iminuit.Minuit.matrix`
+`migrad, minos, hesse, matrix`:
+wrappers of `iminuit.Minuit.migrad`, `iminuit.Minuit.minos`, `iminuit.Minuit.hesse`, `iminuit.Minuit.matrix`.
 
 ## Some useful functions
 
@@ -39,14 +50,16 @@ If `fcn` is defined as `fcn(a, b)`, then the starting values need to be set as `
 Data(x::T, y::T, err::T) where {T<:Vector{Real}}
 Data(df::DataFrame)
 ```
-Fields: `x, y, err, ndata`. This defines a type for data with three columns:` x, y, err`; `ndata` is the number of data rows.
+Fields: `x, y, err, ndata`. This defines a type for data with three columns:` x, y, err`;
+`ndata` is the number of data rows.
 
 ```
 chisq(dist::Function, data::Data, par; fitrange = ())
 ```
 defines the χ² function: `fun` the function to be fitted to the data given by `data`.
 The parameters are collected into `par`, given as an array or a tuple.
-`fitrange`: default to the whole data set; may given as, e.g., `2:10`,
+* `dist` should be defined as `dist(x, par)` or like `dist(x, par1, par2, par3)`.
+* `fitrange`: default to the whole data set; may given as, e.g., `2:10`,
 which means only fitting to the 2nd to the 10th data points
 
 
@@ -54,31 +67,49 @@ which means only fitting to the 2nd to the 10th data points
 produces an errorbar plot of the data.
 
 ```
-plt_best(dist::Function, fit::Fit, data::Data; npts = 100, xrange = (), xlab = "x", ylab = "y", legend = :best)`
+plt_best(dist::Function, fit::AbstractFit, data::Data; npts = 100, xrange = (), xlab = "x", ylab = "y", legend = :best)`
 ```
 for plotting the comparison of the result from fit with the data.
-`xrange`: range of `x` for plotting the best fit; if not given then use the range of `data.x`
-`npts`: number of points computed for the best-fit curve, default = 100.
+* `xrange`: range of `x` for plotting the best fit; if not given then use the range of `data.x`
+* `npts`: number of points computed for the best-fit curve, default = 100.
 
 ### Additional functions for error analysis
 
 So far, the following functions work only for the `χsq` taking all parameters as individual variables (i.e., not in an array).
 
 ```
-get_contours_all(fit::Fit, χsq; npts=20, limits=true, sigma = 1.0)
+get_contours(fit::AbstractFit, χsq, parameters_combination::Vector{Int}; npts::Int=20, limits=true, sigma = 1.0)
+```
+For a given fit `fit` and the χ² function `χsq`, gives an array of parameter arrays,
+with each array corresponding to a set of parameters obtained from calculating the `MINOS` 1σ contour
+(try to find `npts` points in the contour) for the two parameters in `parameters_combination`.
+
+`parameters_combination` is an `Int` array of the numbers of that two parameters, e.g. it is `[1, 2]` for the first
+two parameters and `[2, 3]` or the second and third parameters.
+
+If `limits` is `true`, then fix one parameter to its bounds from `MINOS` of the best fit and get the values for
+the other parameters; this runs over all parameters.
+
+
+```
+get_contours_all(fit::AbstractFit, χsq; npts=20, limits=true, sigma = 1.0)
 ```
 For a given fit `fit` and the χ² function `χsq`, gives a list of parameters sets which are at the edge of
 1σ `MINOS` contours for all parameters combinations. The case of `limits` being `true` runs only once.
 
 
-`contour_df(fit::Fit, χsq; npts=20, limits=true, sigma = 1.0)` gives such parameters in the form of a `DataFrame`.
+`contour_df(fit::AbstractFit, χsq; npts=20, limits=true, sigma = 1.0)` gives such parameters in the form of a `DataFrame`.
 
 ```
-get_contours_given_parameter(fit::Fit, χsq, para::T, range) where {T <: Union{Symbol, String}}
-contour_df_given_parameter(fit, χsq, para::T, range; limits = true) where {T <: Union{Symbol, String}}
+get_contours_given_parameter(fit::AbstractFit, χsq, para::T, range) where {T <: Union{Symbol, String}}
+contour_df_given_parameter(fit::AbstractFit, χsq, para::T, range; limits = true) where {T <: Union{Symbol, String}}
 ```
 give parameter sets in 1σ for a given parameter constrained in a range (the latter returns a `DataFrame`).
+If no user-defined names have been given to the parameters, `para` is then "x0" for the 1st parameter,
+"x1" for the 2nd parameter (default names in `iminuit`), ...
 
+For using array parameters, if no user-defined names have been given to the parameters,
+`paras` should be given such that "x0" for the 1st parameter, "x1" for the 2nd parameter, ...
 
 
 ```
@@ -91,3 +122,5 @@ gives 1σ parameter sets as an `Array` (the latter returns a `DataFrame`) for gi
 * `paras` can be more than 2. Values for the parameters given in `paras` are randomly sampled in the given `ranges`.
 * if `MNbounds` is true, then constrain the parameters in the range provided by `MINOS` no matter whether that is valid or not (to be improved by checking the validity)
 * if `igrad` is true, then use `ForwardDiff.gradient` to compute the gradient.
+* For using array parameters, if no user-defined names have been given to the parameters,
+`paras` should be given such that "x0" for the 1st parameter, "x1" for the 2nd parameter, ...

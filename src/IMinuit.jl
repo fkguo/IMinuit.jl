@@ -1,7 +1,7 @@
 __precompile__() # this module is safe to precompile
 module IMinuit
 
-using PyCall: PyObject, pycall, PyNULL, PyAny, pyimport_conda, pyimport
+using PyCall: PyObject, pycall, PyNULL, PyAny, PyVector, pyimport_conda, pyimport
 import PyCall: PyObject, pycall
 import PyCall: hasproperty # Base.hasproperty in Julia 1.2
 import Base: convert, ==, isequal, hash,  haskey
@@ -10,7 +10,7 @@ import Base: convert, ==, isequal, hash,  haskey
 using ForwardDiff: gradient
 
 export Minuit, migrad, minos, hesse, matrix
-export Fit, func_argnames, Data, chisq, plt_data, plt_best
+export AbstractFit, Fit, ArrayFit, func_argnames, Data, chisq, plt_data, plt_best
 export gradient
 export get_contours, get_contours_all, contour_df, get_contours_given_parameter
 export contour_df_given_parameter, get_contours_samples, contour_df_samples
@@ -74,38 +74,9 @@ end
 ###########################################################################
 
 include("init.jl")
+include("FitStructs.jl")
 
 ###########################################################################
-
-# modified from `Figure` in PyPlot
-mutable struct Fit
-    o::PyObject
-end
-
-PyObject(f::Fit) = getfield(f, :o)
-convert(::Type{Fit}, o::PyObject) = Fit(o)
-==(f::Fit, g::Fit) = PyObject(f) == PyObject(g)
-==(f::Fit, g::PyObject) = PyObject(f) == g
-==(f::PyObject, g::Fit) = f == PyObject(g)
-hash(f::Fit) = hash(PyObject(f))
-pycall(f::Fit, args...; kws...) = pycall(PyObject(f), args...; kws...)
-(f::Fit)(args...; kws...) = pycall(PyObject(f), PyAny, args...; kws...)
-Base.Docs.doc(f::Fit) = Base.Docs.doc(PyObject(f))
-
-Base.setproperty!(f::Fit, s::Symbol, x) = setproperty!(PyObject(f), s, x)
-Base.setproperty!(f::Fit, s::AbstractString, x) = setproperty!(PyObject(f), s, x)
-hasproperty(f::Fit, s::Symbol) = hasproperty(PyObject(f), s)
-Base.propertynames(f::Fit) = propertynames(PyObject(f))
-haskey(f::Fit, x) = haskey(PyObject(f), x)
-
-# let the matrix property to be given as an array
-function Base.getproperty(f::Fit, s::Symbol)
-    # use PyObject(f) instead of f to prevent StackOverflowError
-    s === :matrix ? pycall(PyObject(f).matrix, PyAny) : getproperty(PyObject(f), s)
-end
-function Base.getproperty(f::Fit, s::AbstractString)
-    s === "matrix" ? pycall(PyObject(f).matrix, PyAny) : getproperty(PyObject(f), s)
-end
 
 
 # Wrappers of the iminuit functions
@@ -135,24 +106,25 @@ end
 """
 function Minuit(fcn; kwds...)::Fit
     forced_parameters = Tuple(func_argnames(fcn)) # get the argument lists of fcn
-    return mMinuit(fcn; forced_parameters= forced_parameters, pedantic = false, kwds...)
+    return minuit.Minuit(fcn; forced_parameters= forced_parameters, pedantic = false, kwds...)
 end
 
-Minuit(fcn, start; kwds...)::Fit =  minuit.Minuit.from_array_func(fcn, start; pedantic = false, kwds...)
+Minuit(fcn, start::AbstractVector; kwds...)::ArrayFit =  minuit.Minuit.from_array_func(fcn, start; pedantic = false, kwds...)
+Minuit(fcn, start::Tuple; kwds...)::ArrayFit =  minuit.Minuit.from_array_func(fcn, start; pedantic = false, kwds...)
 
 
-function migrad(f::Fit; ncall = 1000, resume = true, nsplit = 1, precision = nothing)
+function migrad(f::AbstractFit; ncall = 1000, resume = true, nsplit = 1, precision = nothing)
     return pycall(f.migrad, PyObject, ncall, resume, nsplit, precision)
 end
 
-hesse(f::Fit; maxcall = 0) = pycall(f.hesse, PyObject, maxcall)
+hesse(f::AbstractFit; maxcall = 0) = pycall(f.hesse, PyObject, maxcall)
 
-function minos(f::Fit; var = nothing, sigma = 1, maxcall = 0)
+function minos(f::AbstractFit; var = nothing, sigma = 1, maxcall = 0)
     return pycall(f.minos, PyObject, var, sigma, maxcall)
 end
 
 
-matrix(f::Fit; kws...) = pycall(PyObject(f).matrix, PyObject, kws...)
+matrix(f::AbstractFit; kws...) = pycall(PyObject(f).matrix, PyObject, kws...)
 
 
 for f in [:migrad, :minos, :hesse, :matrix]
