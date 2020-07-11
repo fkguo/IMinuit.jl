@@ -1,7 +1,7 @@
 name = "IMinuit"
 uuid = "beb75e20-2205-47e6-ad51-640e9c2309f1"
 authors = ["Feng-Kun Guo"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"

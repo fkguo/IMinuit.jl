@@ -23,6 +23,7 @@ Base.Docs.doc(f::AbstractFit) = Base.Docs.doc(PyObject(f))
 Base.setproperty!(f::AbstractFit, s::Symbol, x) = setproperty!(PyObject(f), s, x)
 Base.setproperty!(f::AbstractFit, s::AbstractString, x) = setproperty!(PyObject(f), s, x)
 hasproperty(f::AbstractFit, s::Symbol) = hasproperty(PyObject(f), s)
+hasproperty(f::AbstractFit, s::AbstractString) = hasproperty(PyObject(f), s)
 Base.propertynames(f::AbstractFit) = propertynames(PyObject(f))
 haskey(f::AbstractFit, x) = haskey(PyObject(f), x)
 
