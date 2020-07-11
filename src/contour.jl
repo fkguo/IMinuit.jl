@@ -21,38 +21,38 @@ function get_contours(fit::Fit, χsq, parameters_combination::Vector{Int}; npts:
     tol = 0.05  # tolerance allowing χ² to be ≤  fmin_1σ + tol
     # setting the parameters to the the best ones from the previous fit
     kwdarg = Dict{Symbol, Any}(Symbol(k) => v for (k,v) in fit.fitarg)
-    args = Symbol.(fit.parameters) #  func_argnames(χsq)
-    @views for i in 1: length(args)    # reset the limits of parameters to be the bounds from minos
-        kwdarg[Symbol(:limit_, args[i])] = get(fit.args, i-1) .+
-            (fit.merrors[String(args[i])][3], fit.merrors[String(args[i])][4])
-             # (fit.merrors[String(args[i]), -1], fit.merrors[String(args[i]), 1])
+    _args = Symbol.(fit.parameters) #  func_argnames(χsq)
+    @views for i in 1: length(_args)    # reset the limits of parameters to be the bounds from minos
+        kwdarg[Symbol(:limit_, _args[i])] = get(fit.args, i-1) .+
+            (fit.merrors[String(_args[i])][3], fit.merrors[String(_args[i])][4])
+             # (fit.merrors[String(_args[i]), -1], fit.merrors[String(_args[i]), 1])
     end
 
     container = Vector{Vector{Float64}}()
     # consider the upper and lower bounds for each parameter
     if limits
-        @views for a in args
-            __fit1__ = Minuit(χsq; kwdarg..., a => kwdarg[Symbol(:limit_, a)][1], Symbol("fix_", a) => true)
-            __fit2__ = Minuit(χsq; kwdarg..., a => kwdarg[Symbol(:limit_, a)][2], Symbol("fix_", a) => true)
-            __fit1__.strategy = 1; __fit1__.migrad()
-            __fit2__.strategy = 1; __fit2__.migrad()
-            __fit1__.fval  < fmin_1σ + tol && push!(container, vcat(__fit1__.fval, [__fit1__.args...]) )
-            __fit2__.fval  < fmin_1σ + tol && push!(container, vcat(__fit2__.fval, [__fit2__.args...]) )
+        @views for a in _args
+            _fit1 = Minuit(χsq; kwdarg..., a => kwdarg[Symbol(:limit_, a)][1], Symbol("fix_", a) => true)
+            _fit2 = Minuit(χsq; kwdarg..., a => kwdarg[Symbol(:limit_, a)][2], Symbol("fix_", a) => true)
+            _fit1.strategy = 1; _fit1.migrad()
+            _fit2.strategy = 1; _fit2.migrad()
+            _fit1.fval  < fmin_1σ + tol && push!(container, vcat(_fit1.fval, args(_fit1)) )
+            _fit2.fval  < fmin_1σ + tol && push!(container, vcat(_fit2.fval, args(_fit2)) )
         end
     end
 
     # choose a pair of parameters, and try to compute the MINOS contour of npts points
-    para1, para2 = args[parameters_combination[1]], args[parameters_combination[2]]
+    para1, para2 = _args[parameters_combination[1]], _args[parameters_combination[2]]
     contour_parameters = fit.mncontour(para1, para2, sigma = sigma, numpoints=npts )[3]
 
     # for each contour point, get the values of the other parameters
     for pa in contour_parameters
         dict = Dict(zip((para1, para2), pa) ) # using dict to overwrite those in kwdarg
-        __fit1__ = Minuit(χsq; kwdarg..., dict...,  #errordef=1,
+        _fit1 = Minuit(χsq; kwdarg..., dict...,  #errordef=1,
                   Symbol("fix_", para1) => true, Symbol("fix_", para2) => true)
-        __fit1__.strategy = 1; __fit1__.migrad()
+        _fit1.strategy = 1; _fit1.migrad()
         # filtering only those with χ² in 1σ
-        __fit1__.fval  < fmin_1σ + tol && push!(container, vcat(__fit1__.fval, [__fit1__.args...]) )
+        _fit1.fval  < fmin_1σ + tol && push!(container, vcat(_fit1.fval, args(_fit1)) )
     end
 
     return container
@@ -65,13 +65,13 @@ function get_contours(fit::ArrayFit, χsq, parameters_combination::Vector{Int}; 
     fmin_1σ = fit.fval + 1.0;   # χsq from the previous best fit + 1.0
     tol = 0.05  # tolerance allowing χ² to be ≤  fmin_1σ + tol
     # setting the parameters to the the best ones from the previous fit
-    start_array = [fit.args...] #PyVector{Real}(fit.args) # does not support assignment
+    start_array = args(fit) #PyVector{Real}(fit.args) # does not support assignment
     kwdarg = Dict{Symbol, Any}(Symbol(k) => v for (k,v) in fit.fitarg)
-    args = Symbol.(fit.parameters)
-    nargs = length(args)
+    _args = Symbol.(fit.parameters)
+    nargs = length(_args)
     @views for i in 1: nargs    # reset the limits of parameters to be the bounds from minos
-        kwdarg[Symbol(:limit_, args[i])] = get(fit.args, i-1) .+
-            (fit.merrors[String(args[i])][3], fit.merrors[String(args[i])][4])
+        kwdarg[Symbol(:limit_, _args[i])] = get(fit.args, i-1) .+
+            (fit.merrors[String(_args[i])][3], fit.merrors[String(_args[i])][4])
     end
 
     # igrad ? gradfun(par) = gradient(χsq, par) : gradfun = nothing
@@ -79,32 +79,32 @@ function get_contours(fit::ArrayFit, χsq, parameters_combination::Vector{Int}; 
     container = Vector{Vector{Float64}}()
     # consider the upper and lower bounds for each parameter
     if limits
-        @views for i in 1:nargs # for a in args
-            a = args[i]
+        @views for i in 1:nargs # for a in _args
+            a = _args[i]
             start_array[i] = kwdarg[Symbol(:limit_, a)][1]
-            __fit1__ = Minuit(χsq, start_array; kwdarg..., Symbol("fix_", a) => true)
+            _fit1 = Minuit(χsq, start_array; kwdarg..., Symbol("fix_", a) => true)
             start_array[i] = kwdarg[Symbol(:limit_, a)][2]
-            __fit2__ = Minuit(χsq, start_array; kwdarg..., Symbol("fix_", a) => true)
-            __fit1__.strategy = 1; __fit1__.migrad()
-            __fit2__.strategy = 1; __fit2__.migrad()
-            __fit1__.fval  < fmin_1σ + tol && push!(container, vcat(__fit1__.fval, [__fit1__.args...]) )
-            __fit2__.fval  < fmin_1σ + tol && push!(container, vcat(__fit2__.fval, [__fit2__.args...]) )
+            _fit2 = Minuit(χsq, start_array; kwdarg..., Symbol("fix_", a) => true)
+            _fit1.strategy = 1; _fit1.migrad()
+            _fit2.strategy = 1; _fit2.migrad()
+            _fit1.fval  < fmin_1σ + tol && push!(container, vcat(_fit1.fval, args(_fit1)) )
+            _fit2.fval  < fmin_1σ + tol && push!(container, vcat(_fit2.fval, args(_fit2)) )
         end
     end
 
     # choose a pair of parameters, and try to compute the MINOS contour of npts points
-    para1, para2 = args[parameters_combination[1]], args[parameters_combination[2]]
+    para1, para2 = _args[parameters_combination[1]], _args[parameters_combination[2]]
     contour_parameters = fit.mncontour(para1, para2, sigma = sigma, numpoints=npts )[3]
 
     # for each contour point, get the values of the other parameters
     for pa in contour_parameters
         start_array[parameters_combination[1]], start_array[parameters_combination[2]] = pa
         # start_array[parameters_combination[2]] = pa[2]
-        __fit1__ = Minuit(χsq, start_array; kwdarg..., # dict...,  #errordef=1,
+        _fit1 = Minuit(χsq, start_array; kwdarg..., # dict...,  #errordef=1,
                   Symbol("fix_", para1) => true, Symbol("fix_", para2) => true)
-        __fit1__.strategy = 1; __fit1__.migrad()
+        _fit1.strategy = 1; _fit1.migrad()
         # filtering only those with χ² in 1σ
-        __fit1__.fval  < fmin_1σ + tol && push!(container, vcat(__fit1__.fval, [__fit1__.args...]) )
+        _fit1.fval  < fmin_1σ + tol && push!(container, vcat(_fit1.fval, args(_fit1)) )
     end
 
     return container
@@ -120,7 +120,7 @@ For a given fit `fit` and the \$\\chi^2\$ function `χsq`, gives a list of param
 function get_contours_all(fit::AbstractFit, χsq; npts=20, limits=true, sigma = 1.0)
     npara = length(func_argnames(χsq))
     container = Vector()
-    push!(container, vcat(fit.fval, convert(Array, fit.values)) ) # the first row set to tbe best fit
+    push!(container, vcat(fit.fval, args(fit)) ) # the first row set to tbe best fit
     npara = fit.narg
     for arr in combinations(1:npara, 2)
         push!(container, get_contours(fit, χsq, arr, npts=npts, limits=limits, sigma = sigma)...)
@@ -159,18 +159,18 @@ function get_contours_given_parameter(fit::Fit, χsq, para::T, range) where {T <
     fmin_1σ = fit.fval + 1.0;   # χsq from the previous best fit + 1.0
     # setting the parameters to the the best ones from the previous fit
     kwdarg = Dict{Symbol, Any}(Symbol(k) => v for (k,v) in fit.fitarg)
-    args = Symbol.(fit.parameters) #  func_argnames(χsq)
-    @views for i in 1: length(args)    # reset the limits of parameters to be the bounds from minos
-        kwdarg[Symbol(:limit_, args[i])] = get(fit.args, i-1) .+
-             (fit.merrors[String(args[i])][3], fit.merrors[String(args[i])][4])
-              # (fit.merrors[String(args[i]), -1], fit.merrors[String(args[i]), 1])
+    _args = Symbol.(fit.parameters) #  func_argnames(χsq)
+    @views for i in 1: length(_args)    # reset the limits of parameters to be the bounds from minos
+        kwdarg[Symbol(:limit_, _args[i])] = get(fit.args, i-1) .+
+             (fit.merrors[String(_args[i])][3], fit.merrors[String(_args[i])][4])
+              # (fit.merrors[String(_args[i]), -1], fit.merrors[String(_args[i]), 1])
     end
 
     container = Vector{Vector{Float64}}()
     for a in range
-        __fit1__ = Minuit(χsq; kwdarg..., para => a, Symbol(:fix_, para) => true)
-        __fit1__.strategy = 2; __fit1__.migrad()
-        __fit1__.fval  ≤ fmin_1σ && push!(container, vcat(__fit1__.fval, [__fit1__.args...]) )
+        _fit1 = Minuit(χsq; kwdarg..., para => a, Symbol(:fix_, para) => true)
+        _fit1.strategy = 2; _fit1.migrad()
+        _fit1.fval  ≤ fmin_1σ && push!(container, vcat(_fit1.fval, args(_fit1)) )
     end
 
     return container
@@ -188,21 +188,21 @@ function get_contours_given_parameter(fit::ArrayFit, χsq, para::T, range) where
     length(fit.merrors) == 0 && fit.minos() # if minos has not been run then run it first
     fmin_1σ = fit.fval + 1.0;   # χsq from the previous best fit + 1.0
     # setting the parameters to the the best ones from the previous fit
-    start_array = [fit.args...] #PyVector{Real}(fit.args) # does not support assignment
+    start_array = args(fit) #PyVector{Real}(fit.args) # does not support assignment
     kwdarg = Dict{Symbol, Any}(Symbol(k) => v for (k,v) in fit.fitarg)
-    args = Symbol.(fit.parameters)
-    nargs = length(args)
+    _args = Symbol.(fit.parameters)
+    nargs = length(_args)
     @views for i in 1:nargs    # reset the limits of parameters to be the bounds from minos
-        kwdarg[Symbol(:limit_, args[i])] = get(fit.args, i-1) .+
-             (fit.merrors[String(args[i])][3], fit.merrors[String(args[i])][4])
+        kwdarg[Symbol(:limit_, _args[i])] = get(fit.args, i-1) .+
+             (fit.merrors[String(_args[i])][3], fit.merrors[String(_args[i])][4])
     end
 
     container = Vector{Vector{Float64}}()
     for a in range
-        start_array[findfirst(x-> x == Symbol(para), args)] = a
-        __fit1__ = Minuit(χsq, start_array; kwdarg..., Symbol(:fix_, para) => true)
-        __fit1__.strategy = 2; __fit1__.migrad()
-        __fit1__.fval  ≤ fmin_1σ && push!(container, vcat(__fit1__.fval, [__fit1__.args...]) )
+        start_array[findfirst(x-> x == Symbol(para), _args)] = a
+        _fit1 = Minuit(χsq, start_array; kwdarg..., Symbol(:fix_, para) => true)
+        _fit1.strategy = 2; _fit1.migrad()
+        _fit1.fval  ≤ fmin_1σ && push!(container, vcat(_fit1.fval, args(_fit1)) )
     end
 
     return container
@@ -245,17 +245,17 @@ function get_contours_samples(fit::Fit, χsq, paras, ranges; nsamples = 100, MNb
     fmin_1σ = fit.fval + 1.0;   # χsq from the previous best fit + 1.0
     # setting the parameters to the the best ones from the previous fit
     kwdarg = Dict{Symbol, Any}(Symbol(k) => v for (k,v) in fit.fitarg)
-    args = Symbol.(fit.parameters)
+    _args = Symbol.(fit.parameters)
     if MNbounds
-        @views for i in 1: length(args)    # reset the limits of parameters to be the bounds from minos
-            kwdarg[Symbol(:limit_, args[i])] = get(fit.args, i-1) .+
-                 (fit.merrors[String(args[i])][3], fit.merrors[String(args[i])][4])
-                  # (fit.merrors[String(args[i]), -1], fit.merrors[String(args[i]), 1])
+        @views for i in 1: length(_args)    # reset the limits of parameters to be the bounds from minos
+            kwdarg[Symbol(:limit_, _args[i])] = get(fit.args, i-1) .+
+                 (fit.merrors[String(_args[i])][3], fit.merrors[String(_args[i])][4])
+                  # (fit.merrors[String(_args[i]), -1], fit.merrors[String(_args[i]), 1])
         end
     end
 
     container = Vector{Vector{Float64}}()
-    push!(container, vcat(fit.fval, [fit.args...]) ) # the first row set to tbe best fit
+    push!(container, vcat(fit.fval, args(fit)) ) # the first row set to tbe best fit
 
     # make range for each parameter with length len; if one only 1 parameter
     @views if isa(ranges[1], Number)
@@ -271,14 +271,14 @@ function get_contours_samples(fit::Fit, χsq, paras, ranges; nsamples = 100, MNb
 
 
     @inbounds @simd for p in unique(sam)
-        if isa(ranges[1], Number)
-            __fit1__ = Minuit(χsq; kwdarg..., paras => p, Symbol(:fix_, paras) => true, grad = gradf)
+        @views if isa(ranges[1], Number)
+            _fit1 = Minuit(χsq; kwdarg..., paras => p, Symbol(:fix_, paras) => true, grad = gradf)
         else
             pdict = Dict(zip(paras, p))
-            __fit1__ = Minuit(χsq; kwdarg..., pdict..., pfix..., grad = gradf)
+            _fit1 = Minuit(χsq; kwdarg..., pdict..., pfix..., grad = gradf)
         end
-        __fit1__.strategy = 1; __fit1__.migrad()
-        __fit1__.fval  ≤ fmin_1σ && push!(container, vcat(__fit1__.fval, [__fit1__.args...]) )
+        _fit1.strategy = 1; _fit1.migrad()
+        _fit1.fval  ≤ fmin_1σ && push!(container, vcat(_fit1.fval, args(_fit1)) )
     end
 
     return container
@@ -290,18 +290,18 @@ function get_contours_samples(fit::ArrayFit, χsq, paras, ranges; nsamples = 100
     length(fit.merrors) == 0 && fit.minos() # if minos has not been run then run it first
     fmin_1σ = fit.fval + 1.0;   # χsq from the previous best fit + 1.0
     # setting the parameters to the the best ones from the previous fit
-    start_array = [fit.args...]
+    start_array = args(fit)
     kwdarg = Dict{Symbol, Any}(Symbol(k) => v for (k,v) in fit.fitarg)
-    args = Symbol.(fit.parameters)
+    _args = Symbol.(fit.parameters)
     if MNbounds
-        @views for i in 1: length(args)    # reset the limits of parameters to be the bounds from minos
-            kwdarg[Symbol(:limit_, args[i])] = get(fit.args, i-1) .+
-                 (fit.merrors[String(args[i])][3], fit.merrors[String(args[i])][4])
+        @views for i in 1: length(_args)    # reset the limits of parameters to be the bounds from minos
+            kwdarg[Symbol(:limit_, _args[i])] = get(fit.args, i-1) .+
+                 (fit.merrors[String(_args[i])][3], fit.merrors[String(_args[i])][4])
         end
     end
 
     container = Vector{Vector{Float64}}()
-    push!(container, vcat(fit.fval, [fit.args...]) ) # the first row set to tbe best fit
+    push!(container, vcat(fit.fval, args(fit)) ) # the first row set to tbe best fit
 
     # make range for each parameter with length len; if one only 1 parameter
     @views if isa(ranges[1], Number)
@@ -315,20 +315,19 @@ function get_contours_samples(fit::ArrayFit, χsq, paras, ranges; nsamples = 100
 
     igrad ? gradf(a...) = gradient(x->χsq(x...), [a...]) : gradf = nothing
 
-# if using @inbounds, then produces
+# if using @inbounds, then crashes julia
     for p in unique(sam)
-        if isa(ranges[1], Number)
-            start_array[findfirst(x-> x == Symbol(paras), args)] = p
-            __fit1__ = Minuit(χsq, start_array; kwdarg..., Symbol(:fix_, paras) => true, grad = gradf)
+        @views if isa(ranges[1], Number)
+            start_array[findfirst(x-> x == Symbol(paras), _args)] = p
+            _fit1 = Minuit(χsq, start_array; kwdarg..., Symbol(:fix_, paras) => true, grad = gradf)
         else
-            # pdict = Dict(zip(paras, p))
             @views for i in eachindex(paras)
-                start_array[findfirst(x-> x == Symbol(paras[i]), args)] = p[i]
+                start_array[findfirst(x-> x == Symbol(paras[i]), _args)] = p[i]
             end
-            __fit1__ = Minuit(χsq, start_array; kwdarg..., pfix..., grad = gradf)
+            _fit1 = Minuit(χsq, start_array; kwdarg..., pfix..., grad = gradf)
         end
-        __fit1__.strategy = 1; __fit1__.migrad()
-        __fit1__.fval  ≤ fmin_1σ && push!(container, vcat(__fit1__.fval, [__fit1__.args...]) )
+        _fit1.strategy = 1; _fit1.migrad()
+        _fit1.fval  ≤ fmin_1σ && push!(container, vcat(_fit1.fval, args(_fit1)) )
     end
 
     return container

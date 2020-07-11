@@ -1,15 +1,15 @@
 __precompile__() # this module is safe to precompile
 module IMinuit
 
-using PyCall: PyObject, pycall, PyNULL, PyAny, PyVector, pyimport_conda, pyimport
+using PyCall: PyObject, pycall, PyNULL, PyAny, PyVector, pyimport_conda, pyimport, pytype_mapping
 import PyCall: PyObject, pycall
-import PyCall: hasproperty # Base.hasproperty in Julia 1.2
-import Base: convert, ==, isequal, hash,  haskey
+# import PyCall: hasproperty # Base.hasproperty in Julia 1.2
+import Base: convert, ==, isequal, hash, hasproperty,  haskey
 # minuit = pyimport(:iminuit)
 
 using ForwardDiff: gradient
 
-export Minuit, migrad, minos, hesse, matrix, minuit, mMinuit
+export Minuit, migrad, minos, hesse, matrix, minuit, mMinuit, args
 export AbstractFit, Fit, ArrayFit, func_argnames, Data, chisq, plt_data, plt_best
 export gradient
 export get_contours, get_contours_all, contour_df, get_contours_given_parameter
@@ -126,16 +126,26 @@ end
 
 matrix(f::AbstractFit; kws...) = pycall(PyObject(f).matrix, PyObject, kws...)
 
+function args(o::AbstractFit)::Vector{Float64}
+    _a::PyObject = o.args;  _n::Int = length(_a)
+    _res = zeros(_n)
+    @views for i = 1:_n
+        _res[i] = get(_a, i-1)
+    end
+    return _res
+end
 
-for f in [:migrad, :minos, :hesse, :matrix]
+for f in [:migrad, :minos, :hesse, :matrix, :args]
     sf = string(f)
-    @eval @doc LazyHelp(mMinuit, $sf)  function $f(args...; kws...) #function $f(args...; kws...)
+    @eval @doc LazyHelp(mMinuit, $sf)  function $f(ars...; kws...) #function $f(args...; kws...)
         if !hasproperty(mMinuit, $sf)
             error("iminuit ", version, " does not have iminuit.Minuit", $sf)
         end
-        return pycall(mMinuit.$sf, PyAny, args...; kws...)
+        return pycall(mMinuit.$sf, PyAny, ars...; kws...)
     end
 end
+
+
 
 #########################################################################
 
