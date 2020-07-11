@@ -113,8 +113,8 @@ For using array parameters, if no user-defined names have been given to the para
 
 
 ```
-get_contours_samples(fit, χsq, paras, ranges; nsamples = 100, MNbounds = true)
-contour_df_samples(fit::Fit, χsq, paras, ranges; nsamples = 100, MNbounds=true)
+get_contours_samples(fit::AbstractFit, χsq, paras, ranges; nsamples = 100, MNbounds = true)
+contour_df_samples(fit::AbstractFit, χsq, paras, ranges; nsamples = 100, MNbounds=true)
 ```
 gives 1σ parameter sets as an `Array` (the latter returns a `DataFrame`) for given parameters constrained in `ranges`:
 * if `paras` is a single parameter, then take equally spaced `nsamples` in `ranges` given in the form of `(min, max)`;
