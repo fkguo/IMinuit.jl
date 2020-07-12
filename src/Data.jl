@@ -34,10 +34,10 @@ keyword settings for `scatter` in `Plots` can be used for the optional arguments
 macro plt_data(data, kws...)
     _plt = quote
         if isempty($kws)
-            scatter($data.x, $data.y, yerror = $data.err,
+            Plots.scatter($data.x, $data.y, yerror = $data.err,
             xlab = "x", ylab = "y", label = "Data")
         else
-            scatter($data.x, $data.y, yerror = $data.err; $(kws...) )
+            Plots.scatter($data.x, $data.y, yerror = $data.err; $(kws...) )
         end
     end
     return esc(_plt)
@@ -86,11 +86,11 @@ macro plt_best(dist, fit, data, kws...)
         _xrange = $data.x #(isempty($xrange) ? $data.x : $xrange)
         _wv = LinRange(_xrange[1], _xrange[end], _npts)
 
-        scatter($data.x, $data.y, yerror = $data.err, label = "Data")
+        Plots.scatter($data.x, $data.y, yerror = $data.err, label = "Data")
         if isempty($kws)
-            plot!(_wv, _dis.(_wv), xlab = "x", ylab = "y", label = "Best fit", lw = 1.5 )
+            Plots.plot!(_wv, _dis.(_wv), xlab = "x", ylab = "y", label = "Best fit", lw = 1.5 )
         else
-            plot!(_wv, _dis.(_wv); $(kws...)  )
+            Plots.plot!(_wv, _dis.(_wv); $(kws...)  )
         end
     end
     esc( _expr )
