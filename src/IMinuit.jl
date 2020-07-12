@@ -5,13 +5,12 @@ using PyCall: PyObject, pycall, PyNULL, PyAny, PyVector, pyimport_conda, pyimpor
 import PyCall: PyObject, pycall
 # import PyCall: hasproperty # Base.hasproperty in Julia 1.2
 import Base: convert, ==, isequal, hash, hasproperty,  haskey
-# minuit = pyimport(:iminuit)
 
 using ForwardDiff: gradient
 
 export Minuit, migrad, minos, hesse, matrix, minuit, mMinuit, args
 export AbstractFit, Fit, ArrayFit, func_argnames, Data, chisq, @plt_data, @plt_best
-export gradient
+export gradient, LazyHelp
 export get_contours, get_contours_all, contour_df, get_contours_given_parameter
 export contour_df_given_parameter, get_contours_samples, contour_df_samples
 

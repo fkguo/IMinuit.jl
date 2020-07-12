@@ -65,11 +65,11 @@ which means only fitting to the 2nd to the 10th data points
 
 
 ```
-@plt_data(data)
-@plt_best(dist, fit, data)
+@plt_data(data, kws...)
+@plt_best(dist, fit, data, kws...)
 ```
 convenient macros for plotting the data, and a comparison of the best-fit curve
-with the data (needs `using Plots`).
+with the data (needs `using Plots`). `kwds...` in `@plt_data` adjusts settings of the `scatter` plot, and that in `@plt_best` adjusts settings of the best-fit curve `plot`.
 
 
 ### Additional functions for error analysis
