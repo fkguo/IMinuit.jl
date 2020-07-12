@@ -1,6 +1,6 @@
 using DataFrames: DataFrame
-using Plots: scatter, plot!, default
-default(framestyle = :box, minorticks = 4)
+# using Plots: scatter, plot!, default
+# default(framestyle = :box, minorticks = 4)
 
 """
     Data(x::T, y::T, err::T) where {T<:Vector{Real}}
@@ -26,12 +26,12 @@ end
 Data(df::DataFrame) = Data(df[:,1], df[:,2], df[:,3])
 
 """
-    plt_data(data::Data; xlab = "x", ylab = "y", legend = :topleft)
+    @plt_data(data)
 
-Make an errorbar plot of the data
+A convenient mascro to make an errorbar plot of the data
 """
-function plt_data(data::Data; xlab = "x", ylab = "y", legend = :best)
-    scatter(data.x, data.y, yerror = data.err, label = "Data", xlab = xlab, ylab = ylab, legend = legend)
+macro plt_data(data)
+    esc( :(scatter($data.x, $data.y, yerror = $data.err, xlab = "x", ylab = "y", label = "Data")) )
 end
 
 
@@ -64,27 +64,19 @@ function chisq(dist::Function, data::Data, par::Tuple; fitrange = ())
 end
 
 """
-    plt_best(dist::Function, fit::AbstractFit, data::Data; npts = 100, xrange = (), xlab = "x", ylab = "y", legend = :best)`
+    @plt_best(dist, fit, data)
 
-for plotting the comparison of the result from fit with the data.
-
-`xrange`: range of `x` for plotting the best fit; if not given then use the range of `data.x`
-
-`npts`: number of points computed for the best-fit curve, default = 100.
+A convenient macro for comparing the best-fit result with the data.
 """
-function plt_best(dist::Function, fit::Fit, data::Data; npts = 100, xrange = (), xlab = "x", ylab = "y", legend = :best)
-    paras1 = convert(Array, fit.args)
-    dis(x) =  dist(x, paras1...)
-    xrange = (isempty(xrange) ? data.x : xrange)
-    wv = LinRange(xrange[1], xrange[end], npts)
-    scatter(data.x, data.y, yerror = data.err, label = "Data", xlab = xlab, ylab = ylab, legend = legend)
-    plot!(wv, dis.(wv), label = "Best fit", lw=1.5)
-end
-function plt_best(dist::Function, fit::ArrayFit, data::Data; npts = 100, xrange = (), xlab = "x", ylab = "y", legend = :best)
-    paras1 = convert(Array, fit.args)
-    dis(x) = dist(x, paras1)
-    xrange = (isempty(xrange) ? data.x : xrange)
-    wv = LinRange(xrange[1], xrange[end], npts)
-    scatter(data.x, data.y, yerror = data.err, label = "Data", xlab = xlab, ylab = ylab, legend = legend)
-    plot!(wv, dis.(wv), label = "Best fit", lw=1.5)
+macro plt_best(dist, fit, data)
+    _expr = quote
+        _npts = 100
+        _paras = args($fit)
+        _dis(x) = (typeof(fit) == ArrayFit ? $dist(x, _paras) : $dist(x, _paras...) )
+        _xrange = $data.x #(isempty($xrange) ? $data.x : $xrange)
+        _wv = LinRange(_xrange[1], _xrange[end], _npts)
+        scatter($data.x, $data.y, yerror = $data.err, xlab = "x", ylab = "y", label = "Data")
+        plot!(_wv, _dis.(_wv), label = "Best fit", lw = 1.5 )
+    end
+    esc( _expr )
 end

@@ -63,15 +63,14 @@ The parameters are collected into `par`, given as an array or a tuple.
 which means only fitting to the 2nd to the 10th data points
 
 
-`plt_data(data::Data; xlab = "x", ylab = "y", legend = :topleft)`
-produces an errorbar plot of the data.
 
 ```
-plt_best(dist::Function, fit::AbstractFit, data::Data; npts = 100, xrange = (), xlab = "x", ylab = "y", legend = :best)`
+@plt_data(data)
+@plt_best(dist, fit, data)
 ```
-for plotting the comparison of the best-fit result with the data.
-* `xrange`: range of `x` for plotting the best fit; if not given then use the range of `data.x`
-* `npts`: number of points computed for the best-fit curve, default = 100.
+convenient macros for plotting the data, and a comparison of the best-fit curve
+with the data (needs `using Plots`).
+
 
 ### Additional functions for error analysis
 
