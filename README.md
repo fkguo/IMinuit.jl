@@ -54,7 +54,7 @@ Fields: `x, y, err, ndata`. This defines a type for data with three columns:` x,
 `ndata` is the number of data rows.
 
 ```
-chisq(dist::Function, data::Data, par; fitrange = ())
+chisq(dist::Function, data, par; fitrange = ())
 ```
 defines the χ² function: `fun` the function to be fitted to the data given by `data`.
 The parameters are collected into `par`, given as an array or a tuple.
