@@ -46,15 +46,16 @@ end
 
 
 """
-    chisq(dist::Function, data::Data, par; fitrange = ())
+    chisq(dist::Function, data, par; fitrange = ())
 
 defines the χ² function: `fun` the function to be fitted to the data given by `data`.
 The parameters are collected into `par`, given as an array or a tuple.
-
-`fitrange`: default to the whole data set; may given as, e.g., `2:10`,
+* `data` can be either given as the `Data` type, or of the form `(xdata, ydata [, err])`.
+If no `err` is given explicitly, the errors are assumed to be 1 for all data points.
+* `fitrange`: default to the whole data set; may given as, e.g., `2:10`,
 which means only fitting to the 2nd to the 10th data points.
 """
-function chisq(dist::Function, data::Data, par::AbstractVector; fitrange = ())
+function chisq(dist::Function, data::Data, par; fitrange = ())
     fitrange = (isempty(fitrange) && 1:data.ndata)
     # __dist__(x, par) = (length(func_argnames(dist)) > 2 ? dist(x, par...) : dist(x, par) )
     res = 0.0
@@ -63,11 +64,23 @@ function chisq(dist::Function, data::Data, par::AbstractVector; fitrange = ())
     end
     return res
 end
-function chisq(dist::Function, data::Data, par::Tuple; fitrange = ())
-    fitrange = (isempty(fitrange) && 1:data.ndata)
+# function chisq(dist::Function, data::Data, par::Tuple; fitrange = ())
+#     fitrange = (isempty(fitrange) && 1:data.ndata)
+#     res = 0.0
+#     @simd for i = fitrange
+#         @inbounds res += ( (data.y[i]- dist(data.x[i], par))/data.err[i] )^2
+#     end
+#     return res
+# end
+function chisq(dist::Function, data, par; fitrange = ())
+    _x = data[1]; _y = data[2]
+    _n = length(_x)
+    _err = (length(data) == 2 ? ones(_n) : data[3])
+    fitrange = (isempty(fitrange) && 1:_n)
+    # __dist__(x, par) = (length(func_argnames(dist)) > 2 ? dist(x, par...) : dist(x, par) )
     res = 0.0
     @simd for i = fitrange
-        @inbounds res += ( (data.y[i]- dist(data.x[i], par))/data.err[i] )^2
+        @inbounds res += ( (_y[i]- dist(_x[i], par))/_err[i] )^2
     end
     return res
 end
