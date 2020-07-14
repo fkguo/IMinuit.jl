@@ -8,7 +8,7 @@ import Base: convert, ==, isequal, hash, hasproperty,  haskey
 
 using ForwardDiff: gradient
 
-export Minuit, migrad, minos, hesse, matrix, minuit, mMinuit, args
+export Minuit, migrad, minos, hesse, matrix, iminuit, args
 export AbstractFit, Fit, ArrayFit, func_argnames, Data, chisq, @plt_data, @plt_best
 export gradient, LazyHelp
 export get_contours, get_contours_all, contour_df, get_contours_given_parameter
@@ -105,11 +105,11 @@ include("FitStructs.jl")
 """
 function Minuit(fcn; kwds...)::Fit
     forced_parameters = Tuple(func_argnames(fcn)) # get the argument lists of fcn
-    return minuit.Minuit(fcn; forced_parameters= forced_parameters, pedantic = false, kwds...)
+    return iminuit.Minuit(fcn; forced_parameters= forced_parameters, pedantic = false, kwds...)
 end
 
-Minuit(fcn, start::AbstractVector; kwds...)::ArrayFit =  minuit.Minuit.from_array_func(fcn, start; pedantic = false, kwds...)
-Minuit(fcn, start::Tuple; kwds...)::ArrayFit =  minuit.Minuit.from_array_func(fcn, start; pedantic = false, kwds...)
+Minuit(fcn, start::AbstractVector; kwds...)::ArrayFit =  iminuit.Minuit.from_array_func(fcn, start; pedantic = false, kwds...)
+Minuit(fcn, start::Tuple; kwds...)::ArrayFit =  iminuit.Minuit.from_array_func(fcn, start; pedantic = false, kwds...)
 
 
 function migrad(f::AbstractFit; ncall = 1000, resume = true, nsplit = 1, precision = nothing)

@@ -1,6 +1,6 @@
 # IMinuit initialization
 
-const minuit = PyNULL()
+const iminuit = PyNULL()
 const mMinuit = PyNULL()
 const iminuit_version = "iminuit=1.4.6" # this has to be at least 1.4.1
 
@@ -9,7 +9,7 @@ const iminuit_version = "iminuit=1.4.6" # this has to be at least 1.4.1
 # if PyCall is configured to use the Julia-specific Python, then iminuit
 # can be automatically installed by pyimport_conda.
 function __init__()
-    copy!(minuit, pyimport_conda("iminuit", iminuit_version, "conda-forge"))
+    copy!(iminuit, pyimport_conda("iminuit", iminuit_version, "conda-forge"))
     copy!(mMinuit, pyimport_conda("iminuit", iminuit_version, "conda-forge").:Minuit)
     # The following converts the ArgsView type to Vector{Float64}, but takes too much time
     # it takes more than 50 μs
