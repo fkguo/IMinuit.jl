@@ -1,5 +1,5 @@
 using Combinatorics: combinations
-import StatsBase: sample
+using StatsBase: sample
 
 """
     get_contours(fit::AbstractFit, χsq, parameters_combination::Vector{Int}; npts::Int=20, limits=true, sigma = 1.0)
@@ -259,10 +259,10 @@ function get_contours_samples(fit::Fit, χsq, paras, ranges; nsamples = 100, MNb
 
     # make range for each parameter with length len; if one only 1 parameter
     @views if isa(ranges[1], Number)
-        sam = LinRange(ranges[1], ranges[2], nsamples)
+        sam = LinRange(ranges[1], ranges[end], nsamples)
         pfix = Symbol(:fix_, paras) => true
     else
-        r = map(x -> LinRange(x[1], x[2], nsamples), ranges)
+        r = map(x -> LinRange(x[1], x[end], nsamples), ranges)
         sam = zip(sample.(r, nsamples)...)
         pfix = map( x -> Symbol(:fix_, x) => true, paras)
     end
