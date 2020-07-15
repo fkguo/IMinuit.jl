@@ -2,6 +2,20 @@ using DataFrames: DataFrame
 # using Plots: scatter, plot!, default
 # default(framestyle = :box, minorticks = 4)
 
+
+# check whether the data are valid for a fit
+function check_data(xdata, ydata, errdata)
+    if any(ismissing, xdata) || any(ismissing, ydata) || any(ismissing, errdata)
+        error("Error: Data contain `missing` values.")
+    end
+    if any(isinf, xdata) || any(isinf, ydata) || any(isnan, xdata) || any(isnan, ydata) || any(isnan, errdata)
+        error("Error: Data contain `Inf` or `NaN` values.")
+    end
+    if any(iszero, errdata)
+        error("Error: Data contain 0 in the errors.")
+    end
+end
+
 """
     Data(x::T, y::T, err::T) where {T<:Vector{Real}}
     Data(df::DataFrame)
@@ -18,6 +32,7 @@ struct Data
     err::Vector{Float64}
     ndata::Int
     function Data(x::Vector{T}, y::Vector{T}, err::Vector{T}) where {T<:Real}
+        check_data(x, y, err)
         ndata = length(x)
         new(x, y, err, ndata)
     end

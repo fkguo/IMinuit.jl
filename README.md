@@ -4,7 +4,7 @@
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://fkguo.github.io/IMinuit.jl/dev)
 [![Build Status](https://github.com/fkguo/IMinuit.jl/workflows/CI/badge.svg)](https://github.com/fkguo/IMinuit.jl/actions)
 
-Julia wrapper of the Python package [`iminuit`](https://github.com/scikit-hep/iminuit). The `minuit` object in `iminuit` is defined as an `AbstractFit`:
+Julia wrapper of the Python package [`iminuit`](https://github.com/scikit-hep/iminuit), which is the interface to the C++ MINUIT2, widely used in fitting in the high-energy physics community. The `minuit` object in `iminuit` is defined as an `AbstractFit`:
 if using array parameters, then `ArrayFit`;
 if using individual parameters, then `Fit`.
 
@@ -13,6 +13,7 @@ Install by `]add https://github.com/fkguo/IMinuit.jl`
 Functions defined:
 
 ## Functions in `iminuit`
+
 
 ```
 Minuit(fcn; kwds...)::Fit
@@ -42,7 +43,18 @@ If `fcn` is defined as `fcn(a, b)`, then the starting values need to be set as
 `migrad, minos, hesse, matrix`:
 wrappers of `iminuit.Minuit.migrad`, `iminuit.Minuit.minos`, `iminuit.Minuit.hesse`, `iminuit.Minuit.matrix`.
 
+
+
 ## Some useful functions
+
+```
+model_fit(model::Function, data::Data, start_values; kws...)
+@model_fit model data start_values kws...
+```
+the returning stype is `ArrayFit`, which can be passed
+to `migrad`, `minos` etc. to perform the fit and error analysis.
+ `model` is the function to be fitted to `data`; it should be of the form
+`model(x, params)` with `params` given either as an array or a tuple.
 
 `func_argnames(f::Function)`:  Extracting the argument names of a function as an array.
 
