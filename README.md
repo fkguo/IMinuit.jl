@@ -51,7 +51,7 @@ wrappers of `iminuit.Minuit.migrad`, `iminuit.Minuit.minos`, `iminuit.Minuit.hes
 model_fit(model::Function, data::Data, start_values; kws...)
 @model_fit model data start_values kws...
 ```
-the returning stype is `ArrayFit`, which can be passed
+the returning type is `ArrayFit`, which can be passed
 to `migrad`, `minos` etc. to perform the fit and error analysis.
  `model` is the function to be fitted to `data`; it should be of the form
 `model(x, params)` with `params` given either as an array or a tuple.
@@ -79,6 +79,7 @@ which means only fitting to the 2nd to the 10th data points.
 
 ```
 @plt_data(data, kws...)
+@plt_data!(data, kws...)
 @plt_best(dist, fit, data, kws...)
 ```
 convenient macros for plotting the data, and a comparison of the best-fit curve
@@ -117,11 +118,9 @@ get_contours_given_parameter(fit::AbstractFit, χsq, para::T, range) where {T <:
 contour_df_given_parameter(fit::AbstractFit, χsq, para::T, range; limits = true) where {T <: Union{Symbol, String}}
 ```
 give parameter sets in 1σ for a given parameter constrained in a range (the latter returns a `DataFrame`).
-If no user-defined names have been given to the parameters, `para` is then "x0" for the 1st parameter,
-"x1" for the 2nd parameter (default names in `iminuit`), ...
 
 For using array parameters, if no user-defined names have been given to the parameters,
-`paras` should be given such that `"x0"` or `:x0` for the 1st parameter, `"x1"` or `:x1` for the 2nd parameter, ...
+`paras` should be given such that `"x0"` or `:x0` for the 1st parameter, `"x1"` or `:x1` for the 2nd parameter (default names in `iminuit`), ...
 
 
 ```

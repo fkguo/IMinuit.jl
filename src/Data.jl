@@ -31,7 +31,7 @@ struct Data
     y::Vector{Float64}
     err::Vector{Float64}
     ndata::Int
-    function Data(x::Vector{T}, y::Vector{T}, err::Vector{T}) where {T<:Real}
+    function Data(x, y, err) # Data(x::Vector{T}, y::Vector{T}, err::Vector{T}) where {T<:Real}
         check_data(x, y, err)
         ndata = length(x)
         new(x, y, err, ndata)
@@ -42,8 +42,9 @@ Data(df::DataFrame) = Data(df[:,1], df[:,2], df[:,3])
 
 """
     @plt_data(data, kws...)
+    @plt_data!(data, kws...)
 
-A convenient mascro to make an errorbar plot of the `data`; all combinations of
+Convenient mascros to make an errorbar plot of the `data`; all combinations of
 keyword settings for `scatter` in `Plots` can be used for the optional arguments `kws...`
 """
 macro plt_data(data, kws...)
@@ -57,7 +58,17 @@ macro plt_data(data, kws...)
     end
     return esc(_plt)
 end
-
+macro plt_data!(data, kws...)
+    _plt = quote
+        if isempty($kws)
+            Plots.scatter!($data.x, $data.y, yerror = $data.err,
+            xlab = "x", ylab = "y", label = "Data")
+        else
+            Plots.scatter!($data.x, $data.y, yerror = $data.err; $(kws...) )
+        end
+    end
+    return esc(_plt)
+end
 
 
 """
