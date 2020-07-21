@@ -130,7 +130,7 @@ function get_contours_all(fit::AbstractFit, χsq; npts=20, limits=true, sigma = 
     container = Vector()
     push!(container, vcat(fit.fval, args(fit)) ) # the first row set to tbe best fit
     # npara = fit.narg
-    free_pars_indices = findall(x-> x in f0fix.list_of_vary_param(), f0fix.parameters)
+    free_pars_indices = findall(x-> x in fit.list_of_vary_param(), fit.parameters)
     for arr in combinations(free_pars_indices, 2)  # (1:npara, 2)
         push!(container, get_contours(fit, χsq, arr, npts=npts, limits=limits, sigma = sigma)...)
         limits = false  # run limits only once
