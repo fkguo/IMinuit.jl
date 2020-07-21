@@ -121,7 +121,7 @@ macro plt_best(dist, fit, data, kws...)
     _expr = quote
         _npts = 100
         _paras = args($fit)
-        _dis(x) = (typeof(fit) == ArrayFit ? $dist(x, _paras) : $dist(x, _paras...) )
+        _dis(x) = (typeof($fit) == ArrayFit ? $dist(x, _paras) : $dist(x, _paras...) )
         _xrange = $data.x #(isempty($xrange) ? $data.x : $xrange)
         _wv = LinRange(_xrange[1], _xrange[end], _npts)
 
