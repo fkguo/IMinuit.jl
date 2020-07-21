@@ -108,7 +108,7 @@ this runs over all parameters.
 get_contours_all(fit::AbstractFit, χsq; npts=20, limits=true, sigma = 1.0)
 ```
 For a given fit `fit` and the χ² function `χsq`, gives a list of parameters sets which are at the edge of
-1σ `MINOS` contours for all parameters combinations. The case of `limits` being `true` runs only once.
+1σ `MINOS` contours for all combinations of varying parameters. The case of `limits` being `true` runs only once.
 
 
 `contour_df(fit::AbstractFit, χsq; npts=20, limits=true, sigma = 1.0)` gives such parameters in the form of a `DataFrame`.
