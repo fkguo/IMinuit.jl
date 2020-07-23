@@ -113,6 +113,7 @@ end
 
 """
     @plt_best(dist, fit, data, kws...)
+    @plt_best!(dist, fit, data, kws...)
 
 A convenient macro for comparing the best-fit result with the data; all combinations of
 keyword settings for `plot` in `Plots` can be used for the optional arguments `kws...`
@@ -126,6 +127,23 @@ macro plt_best(dist, fit, data, kws...)
         _wv = LinRange(_xrange[1], _xrange[end], _npts)
 
         Plots.scatter($data.x, $data.y, yerror = $data.err, label = "Data")
+        if isempty($kws)
+            Plots.plot!(_wv, _dis.(_wv), xlab = "x", ylab = "y", label = "Best fit", lw = 1.5 )
+        else
+            Plots.plot!(_wv, _dis.(_wv); $(kws...)  )
+        end
+    end
+    esc( _expr )
+end
+macro plt_best!(dist, fit, data, kws...)
+    _expr = quote
+        _npts = 100
+        _paras = args($fit)
+        _dis(x) = (typeof($fit) == ArrayFit ? $dist(x, _paras) : $dist(x, _paras...) )
+        _xrange = $data.x #(isempty($xrange) ? $data.x : $xrange)
+        _wv = LinRange(_xrange[1], _xrange[end], _npts)
+
+        Plots.scatter!($data.x, $data.y, yerror = $data.err, label = "Data")
         if isempty($kws)
             Plots.plot!(_wv, _dis.(_wv), xlab = "x", ylab = "y", label = "Best fit", lw = 1.5 )
         else
