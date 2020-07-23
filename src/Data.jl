@@ -23,6 +23,7 @@ end
 Fields: `x, y, err, ndata`
 
 This defines a type for data with three columns:` x, y, err`; `ndata` is the number of data rows.
+Different `Data` sets can be concatenated as `vat(dat1, dat2, dat3)`.
 
 Only symmetric errors (of `y`) are supported.
 """
@@ -39,6 +40,10 @@ struct Data
 end
 
 Data(df::DataFrame) = Data(df[:,1], df[:,2], df[:,3])
+
+import Base.vcat
+vcat(dat1::Data, dat2::Data) = Data(vcat(dat1.x, dat2.x), vcat(dat1.y, dat2.y), vcat(dat1.err, dat2.err))
+vcat(dat1::Data, dat...) = reduce(vcat, [dat1, dat...])
 
 """
     @plt_data(data, kws...)
