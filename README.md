@@ -62,8 +62,10 @@ to `migrad`, `minos` etc. to perform the fit and error analysis.
 Data(x::T, y::T, err::T) where {T<:Vector{Real}}
 Data(df::DataFrame)
 ```
-Fields: `x, y, err, ndata`. This defines a type for data with three columns:` x, y, err`;
-`ndata` is the number of data rows.
+* Fields: `x, y, err, ndata`. This defines a type for data with three columns:` x, y, err`;
+* `ndata` is the number of data rows, automatically counted.
+* Different `Data` sets can be concatenated as `vat(dat1, dat2, dat3)`.
+
 
 ```
 chisq(dist::Function, data, par; fitrange = ())

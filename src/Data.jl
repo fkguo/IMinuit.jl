@@ -23,6 +23,7 @@ end
 Fields: `x, y, err, ndata`
 
 This defines a type for data with three columns:` x, y, err`; `ndata` is the number of data rows.
+Different `Data` sets can be concatenated as `vat(dat1, dat2, dat3)`.
 
 Only symmetric errors (of `y`) are supported.
 """
@@ -39,6 +40,10 @@ struct Data
 end
 
 Data(df::DataFrame) = Data(df[:,1], df[:,2], df[:,3])
+
+import Base.vcat
+vcat(dat1::Data, dat2::Data) = Data(vcat(dat1.x, dat2.x), vcat(dat1.y, dat2.y), vcat(dat1.err, dat2.err))
+vcat(dat1::Data, dat...) = reduce(vcat, [dat1, dat...])
 
 """
     @plt_data(data, kws...)
@@ -82,10 +87,10 @@ If no `err` is given explicitly, the errors are assumed to be 1 for all data poi
 which means only fitting to the 2nd to the 10th data points.
 """
 function chisq(dist::Function, data::Data, par; fitrange = ())
-    fitrange = (isempty(fitrange) && 1:data.ndata)
+    fitrange = (isempty(fitrange) ? (1:data.ndata) : fitrange)
     # __dist__(x, par) = (length(func_argnames(dist)) > 2 ? dist(x, par...) : dist(x, par) )
     res = 0.0
-    @simd for i = fitrange
+    @simd for i = fitrange[1]:fitrange[end]
         @inbounds res += ( (data.y[i]- dist(data.x[i], par))/data.err[i] )^2
     end
     return res
@@ -102,10 +107,10 @@ function chisq(dist::Function, data, par; fitrange = ())
     _x = data[1]; _y = data[2]
     _n = length(_x)
     _err = (length(data) == 2 ? ones(_n) : data[3])
-    fitrange = (isempty(fitrange) && 1:_n)
+    fitrange = (isempty(fitrange) ? (1:data.ndata) : fitrange)
     # __dist__(x, par) = (length(func_argnames(dist)) > 2 ? dist(x, par...) : dist(x, par) )
     res = 0.0
-    @simd for i = fitrange
+    @simd for i = fitrange[1]:fitrange[end]
         @inbounds res += ( (_y[i]- dist(_x[i], par))/_err[i] )^2
     end
     return res
