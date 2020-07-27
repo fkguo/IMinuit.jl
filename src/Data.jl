@@ -41,9 +41,10 @@ end
 
 Data(df::DataFrame) = Data(df[:,1], df[:,2], df[:,3])
 
-import Base.vcat
+import Base.vcat, Base.getindex
 vcat(dat1::Data, dat2::Data) = Data(vcat(dat1.x, dat2.x), vcat(dat1.y, dat2.y), vcat(dat1.err, dat2.err))
 vcat(dat1::Data, dat...) = reduce(vcat, [dat1, dat...])
+getindex(data::Data, in) = Data(map(x-> getindex(x, in), (data.x, data.y, data.err))...)
 
 """
     @plt_data(data, kws...)
