@@ -123,13 +123,19 @@ end
 
 A convenient macro for comparing the best-fit result with the data; all combinations of
 keyword settings for `plot` in `Plots` can be used for the optional arguments `kws...`
+The ordering of `dist`, `fit`, and `data` does not matter.
 """
 macro plt_best(dist, fit, data, kws...)
     _expr = quote
+        _arr = [$dist, $fit, $data]
+        _fit = _arr[findfirst(x->typeof(x) <:AbstractFit, _arr)]
+        _dist = _arr[findfirst(x->typeof(x) <:Function, _arr)]
+        _data = _arr[findfirst(x->typeof(x) <:Data, _arr)]
+
         _npts = 100
-        _paras = args($fit)
-        _dis(x) = (typeof($fit) == ArrayFit ? $dist(x, _paras) : $dist(x, _paras...) )
-        _xrange = $data.x #(isempty($xrange) ? $data.x : $xrange)
+        _paras = args(_fit)
+        _dis(x) = (typeof(_fit) == ArrayFit ? _dist(x, _paras) : _dist(x, _paras...) )
+        _xrange = _data.x
         _wv = LinRange(_xrange[1], _xrange[end], _npts)
 
         Plots.scatter($data.x, $data.y, yerror = $data.err, label = "Data")
@@ -141,12 +147,17 @@ macro plt_best(dist, fit, data, kws...)
     end
     esc( _expr )
 end
-macro plt_best!(dist, fit, data, kws...)
+macro plt_best(dist, fit, data, kws...)
     _expr = quote
+        _arr = [$dist, $fit, $data]
+        _fit = _arr[findfirst(x->typeof(x) <:AbstractFit, _arr)]
+        _dist = _arr[findfirst(x->typeof(x) <:Function, _arr)]
+        _data = _arr[findfirst(x->typeof(x) <:Data, _arr)]
+
         _npts = 100
-        _paras = args($fit)
-        _dis(x) = (typeof($fit) == ArrayFit ? $dist(x, _paras) : $dist(x, _paras...) )
-        _xrange = $data.x #(isempty($xrange) ? $data.x : $xrange)
+        _paras = args(_fit)
+        _dis(x) = (typeof(_fit) == ArrayFit ? _dist(x, _paras) : _dist(x, _paras...) )
+        _xrange = _data.x
         _wv = LinRange(_xrange[1], _xrange[end], _npts)
 
         Plots.scatter!($data.x, $data.y, yerror = $data.err, label = "Data")
