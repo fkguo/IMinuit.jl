@@ -147,7 +147,7 @@ macro plt_best(dist, fit, data, kws...)
     end
     esc( _expr )
 end
-macro plt_best(dist, fit, data, kws...)
+macro plt_best!(dist, fit, data, kws...)
     _expr = quote
         _arr = [$dist, $fit, $data]
         _fit = _arr[findfirst(x->typeof(x) <:AbstractFit, _arr)]
