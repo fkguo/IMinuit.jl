@@ -43,6 +43,8 @@ If `fcn` is defined as `fcn(a, b)`, then the starting values need to be set as
 `migrad, minos, hesse, matrix`:
 wrappers of `iminuit.Minuit.migrad`, `iminuit.Minuit.minos`, `iminuit.Minuit.hesse`, `iminuit.Minuit.matrix`.
 
+For interactive examples, click
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/fkguo/IMinuit.jl/master?urlpath=lab%2Ftree%2Fdocs%2Fexample.ipynb)
 
 
 ## Some useful functions
