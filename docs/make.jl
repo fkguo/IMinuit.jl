@@ -28,7 +28,7 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/fkguo/IMinuit.jl"
+    repo="github.com/fkguo/IMinuit.jl",
     target = "build",
     deps = nothing,
     make = nothing,
