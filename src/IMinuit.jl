@@ -149,15 +149,15 @@ for fun in [:profile, :draw_profile]
 end
 
 
-for f in [:migrad, :minos, :hesse, :matrix, :args, :contour, :mncontour, :profile, :mnprofile, :draw_mncontour, :draw_contour, :draw_profile]
-    sf = string(f)
-    @eval @doc LazyHelp(mMinuit, $sf)  function $f(ars...; kws...) 
-        if !hasproperty(mMinuit, $sf)
-            error("iminuit ", version, " does not have iminuit.Minuit", $sf)
-        end
-        return pycall(mMinuit.$sf, PyAny, ars...; kws...)
-    end
-end
+# for f in [:migrad, :minos, :hesse, :matrix, :args, :contour, :mncontour, :profile, :mnprofile, :draw_mncontour, :draw_contour, :draw_profile]
+#     sf = string(f)
+#     @eval @doc LazyHelp(mMinuit, $sf)  function $f(ars...; kws...) 
+#         if !hasproperty(mMinuit, $sf)
+#             error("iminuit ", version, " does not have iminuit.Minuit", $sf)
+#         end
+#         return pycall(mMinuit.$sf, PyAny, ars...; kws...)
+#     end
+# end
 
 #########################################################################
 

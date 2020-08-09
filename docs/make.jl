@@ -29,8 +29,8 @@ makedocs(;
 
 deploydocs(;
     repo="github.com/fkguo/IMinuit.jl"
-    # target = "build",
-    # deps = nothing,
-    # make = nothing,
-    # branch = "gh-pages"
+    target = "build",
+    deps = nothing,
+    make = nothing,
+    branch = "gh-pages"
 )
