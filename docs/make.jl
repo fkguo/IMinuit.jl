@@ -1,8 +1,8 @@
 using Documenter
-# using Pkg
+using Pkg
 
-# ENV["PYTHON"] = ""
-# Pkg.build("PyCall")
+ENV["PYTHON"] = ""
+Pkg.build("PyCall")
 
 using IMinuit
 
