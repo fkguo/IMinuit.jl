@@ -1,10 +1,20 @@
 abstract type AbstractFit end
 
 # # modified from `Figure` in PyPlot
+"""
+    Fit <: AbstractFit
+
+struct for fit with individual parameters.
+"""
 mutable struct Fit <: AbstractFit
     o::PyObject
 end
 
+"""
+    ArrayFit <: AbstractFit
+
+struct for fit with parameters collected in an `Array`.
+"""
 mutable struct ArrayFit <: AbstractFit
     o::PyObject
 end

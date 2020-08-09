@@ -1,8 +1,8 @@
 using Documenter
-using Pkg
+# using Pkg
 
-ENV["PYTHON"] = ""
-Pkg.build("PyCall")
+# ENV["PYTHON"] = ""
+# Pkg.build("PyCall")
 
 using IMinuit
 
@@ -19,13 +19,18 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
+        "iminuit functions" => "iminuit.md",
+        "Example" => "example.md",
+        "Data and plot macros" => "data.md",
+        "chisq and model_fit" => "modelfit.md",
+        "Error analysis" => "contour.md"
     ],
 )
 
 deploydocs(;
-    repo="github.com/fkguo/IMinuit.jl",
-    target = "build",
-    deps = nothing,
-    make = nothing,
-    branch = "gh-pages"
+    repo="github.com/fkguo/IMinuit.jl"
+    # target = "build",
+    # deps = nothing,
+    # make = nothing,
+    # branch = "gh-pages"
 )

@@ -1,11 +1,11 @@
 using Combinatorics: combinations
 using StatsBase: sample
 
-"""
+@doc raw"""
     get_contours(fit::AbstractFit, χsq, parameters_combination::Vector{Int}; npts::Int=20, limits=true, sigma = 1.0)
 
-For a given fit `fit` and the \$\\chi^2\$ function `χsq`, gives an array of parameter arrays,
-with each array corresponding to a set of parameters obtained from calculating the `MINOS` \$1\\sigma\$ contour
+For a given fit `fit` and the ``\chi^2`` function `χsq`, gives an array of parameter arrays,
+with each array corresponding to a set of parameters obtained from calculating the `MINOS` ``1σ`` contour
 (try to find `npts` points in the contour) for the two parameters in `parameters_combination`.
 
 `parameters_combination` is an `Int` array of the numbers of that two parameters, e.g. it is `[1, 2]` for the first
@@ -119,11 +119,11 @@ function get_contours(fit::ArrayFit, χsq, parameters_combination::Vector{Int}; 
 end
 
 
-"""
+@doc raw"""
     get_contours_all(fit::AbstractFit, χsq; npts=20, limits=true, sigma = 1.0)
 
-For a given fit `fit` and the \$\\chi^2\$ function `χsq`, gives a list of parameters sets which are at the edge of
-\$1\\sigma\$ `MINOS` contours for all combinations of varying parameters. The case of `limits` being `true` runs only once.
+For a given fit `fit` and the ``\chi^2`` function `χsq`, gives a list of parameters sets which are at the edge of
+``1σ`` `MINOS` contours for all combinations of varying parameters. The case of `limits` being `true` runs only once.
 """
 function get_contours_all(fit::AbstractFit, χsq; npts=20, limits=true, sigma = 1.0)
     npara = length(func_argnames(χsq))
@@ -142,7 +142,7 @@ end
 """
     contour_df(fit::AbstractFit, χsq; npts=20, limits=true, sigma = 1.0)
 
-parameters in the form of a dataframe
+parameters in the form of a dataframe.
 """
 function contour_df(fit::AbstractFit, χsq; npts=20, limits=true, sigma = 1.0)
     parameters_1sigma =  get_contours_all(fit, χsq, npts=npts, limits=limits, sigma = sigma)
@@ -160,7 +160,7 @@ end
 """
     get_contours_given_parameter(fit::Fit, χsq, para::T, range) where {T <: Union{Symbol, String}}
 
-gives parameter sets in one sigma for a given parameter constrained in a range
+gives parameter sets in one sigma for a given parameter constrained in a range.
 """
 function get_contours_given_parameter(fit::Fit, χsq, para::T, range) where {T <: Union{Symbol, String}}
     fit.migrad_ok() || fit.migrad();        # if migrad has not been run then run it first
@@ -225,7 +225,7 @@ end
 """
     contour_df_given_parameter(fit::AbstractFit, χsq, para::T, range; limits = true) where {T <: Union{Symbol, String}}
 
-gives parameter sets in one sigma for a given parameter constrained in a range as a `DataFrame`
+return parameter sets in one sigma for a given parameter constrained in a range as a `DataFrame`.
 """
 function contour_df_given_parameter(fit::AbstractFit, χsq, para::T, range; limits = true) where {T <: Union{Symbol, String}}
     parameters =  get_contours_given_parameter(fit, χsq, para, range)
@@ -240,12 +240,12 @@ function contour_df_given_parameter(fit::AbstractFit, χsq, para::T, range; limi
 end
 
 
-"""
+@doc raw"""
     get_contours_samples(fit::AbstractFit, χsq, paras, ranges; nsamples = 100, MNbounds = true)
 
-gives 1σ parameter sets as an `Array` (the latter returns a `DataFrame`) for given parameters constrained in `ranges`:
+return 1σ parameter sets as an `Array` (the latter returns a `DataFrame`) for given parameters constrained in `ranges`:
 * if `paras` is a single parameter, then take equally spaced `nsamples` in `ranges` given in the form of `(min, max)`;
-* if `paras` contain more (≧2) parameters, then `paras` should be of the form `(:para1, :para2)`, `ranges` should be of the form `((min1, max1), (min2, max2))`,
+* if `paras` contain more (``\geq 2``) parameters, then `paras` should be of the form `(:para1, :para2)`, `ranges` should be of the form `((min1, max1), (min2, max2))`,
 and values for the parameters given in `paras` are randomly sampled in the given `ranges`;
 * if `MNbounds` is true, then constrain the parameters in the range provided by `MINOS` no matter whether that is valid or not (to be improved by checking the validity)
 * if `igrad` is true, then use `ForwardDiff.gradient` to compute the gradient.
@@ -350,10 +350,10 @@ function get_contours_samples(fit::ArrayFit, χsq, paras, ranges; nsamples = 100
     return container
 end
 
-"""
+@doc raw"""
     contour_df_samples(fit::AbstractFit, χsq, paras, ranges; nsamples = 100, MNbounds=true)
 
-gives \$1\\sigma\$ parameter sets as a `DataFrame` for given parameters constrained in `ranges`:
+gives  1σ parameter sets as a `DataFrame` for given parameters constrained in `ranges`:
 * if `paras` is a single parameter, then take equally spaced `nsamples` in `ranges` given in the form of `(min, max)`;
 * if `paras` contain more parameters, then `paras` should be of the form `(:para1, :para2)`, `ranges` should be of the form `((min1, max1), (min2, max2))`;
 * `paras` can be more than 2. Values for the parameters given in `paras` are randomly sampled in the given `ranges`.

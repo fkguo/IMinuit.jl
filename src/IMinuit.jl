@@ -51,7 +51,7 @@ end
     method_argnames(m::Method)
 
     Extracting the argument names of a method as an array.
-    Modified from [https://github.com/JuliaLang/julia/blob/master/base/methodshow.jl]() (`Vector{Any}`` changed to `Vector{Symbol}`)
+    Modified from [`methodshow.jl`](https://github.com/JuliaLang/julia/blob/master/base/methodshow.jl) (`Vector{Any}`` changed to `Vector{Symbol}`)
 """
 function method_argnames(m::Method)
     argnames = ccall(:jl_uncompress_argnames, Vector{Symbol}, (Any,), m.slot_syms)
@@ -79,28 +79,32 @@ include("FitStructs.jl")
 
 
 # Wrappers of the iminuit functions
-"""
+@doc raw"""
     Minuit(fcn; kwds...)
     Minuit(fcn, start; kwds...)
 
-    Wrapper of the `iminuit` function `Minuit`.
-    `fcn` is the function to be optimized.
-    `start`: an array/tuple of the starting values of the parameters.
-    `kwds` is the list of keywrod arguments of `Minuit`. For more information, refer to the `iminuit` manual.
+Wrapper of the `iminuit` function `Minuit`.
+* `fcn` is the function to be optimized.
+* `start`: an array/tuple of the starting values of the parameters.
+* `kwds` is the list of keywrod arguments of `Minuit`. For more information, refer to the `iminuit` manual.
 
-    Example:
+Example:
+```
+fit = Minuit(fcn, [1, 0]; name = ["a", "b"], error = 0.1*ones(2), 
+            fix_a = true, limit_b = (0, 50) )
+migrad(fit)
+```
+where the parameters are collected in an array `par` which is the argument of `fcn(par)`. In this case,
+one can use external code (e.g., `using ForwardDiff: gradient`) to compute the gradient as `gradfun(par) = gradient(fcn, par)`, and include `grad = gradfun` as a keyword argument.
 
-    `Minuit(fcn, [1,  0]; name = ["a", "b], error = 0.1*ones(2), fix_a = true, limit_b = (0, 50) )`
-    where the parameters are collected in an array `par` which is the argument of `fcn(par)`. In this case,
-    one can use external code (e.g., `using ForwardDiff: gradient`) to compute the gradient as `gradfun(par) = gradient(fcn, par)`, and include `grad = gradfun` as a keyword argument.
 
+If `fcn` is defined as `fcn(a, b)`, then the starting values need to be
+set as `Minuit(fcn, a = 1, b = 0)`.
 
-    If `fcn` is defined as `fcn(a, b)`, then the starting values need to be
-    set as `Minuit(fcn, a = 1, b = 0)`.
+From `iminuit`:
 
-    From `iminuit`:
-
-    `Minuit(fcn, throw_nan=False, pedantic=True, forced_parameters=None, print_level=0, errordef=None, grad=None, use_array_call=False, **kwds)`
+`Minuit(fcn, throw_nan=False, pedantic=True, forced_parameters=None, print_level=0, 
+        errordef=None, grad=None, use_array_call=False, **kwds)`
 
 """
 function Minuit(fcn; kwds...)::Fit
@@ -111,12 +115,13 @@ end
 Minuit(fcn, start::AbstractVector; kwds...)::ArrayFit =  iminuit.Minuit.from_array_func(fcn, start; pedantic = false, kwds...)
 Minuit(fcn, start::Tuple; kwds...)::ArrayFit =  iminuit.Minuit.from_array_func(fcn, start; pedantic = false, kwds...)
 
-
 function migrad(f::AbstractFit; ncall = 1000, resume = true, nsplit = 1, precision = nothing)
     return pycall(f.migrad, PyObject, ncall, resume, nsplit, precision)
 end
 
+
 hesse(f::AbstractFit; maxcall = 0) = pycall(f.hesse, PyObject, maxcall)
+
 
 function minos(f::AbstractFit; var = nothing, sigma = 1, maxcall = 0)
     return pycall(f.minos, PyObject, var, sigma, maxcall)
@@ -134,15 +139,15 @@ function args(o::AbstractFit)::Vector{Float64}
     return _res
 end
 
-for f in [:migrad, :minos, :hesse, :matrix, :args]
-    sf = string(f)
-    @eval @doc LazyHelp(mMinuit, $sf)  function $f(ars...; kws...) #function $f(args...; kws...)
-        if !hasproperty(mMinuit, $sf)
-            error("iminuit ", version, " does not have iminuit.Minuit", $sf)
-        end
-        return pycall(mMinuit.$sf, PyAny, ars...; kws...)
-    end
-end
+# for f in [:migrad, :minos, :hesse, :matrix, :args, :contour, :mncontour, :mnprofile]
+#     sf = string(f)
+#     @eval @doc LazyHelp(mMinuit, $sf)  function $f(ars...; kws...) #function $f(args...; kws...)
+#         if !hasproperty(mMinuit, $sf)
+#             error("iminuit ", version, " does not have iminuit.Minuit", $sf)
+#         end
+#         return pycall(mMinuit.$sf, PyAny, ars...; kws...)
+#     end
+# end
 
 #########################################################################
 
