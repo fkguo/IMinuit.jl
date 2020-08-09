@@ -1,6 +1,8 @@
 using Documenter
+using Pkg
 
 ENV["PYTHON"] = ""
+Pkg.build("PyCall")
 
 using IMinuit
 
@@ -25,5 +27,5 @@ deploydocs(;
     target = "build",
     deps = nothing,
     make = nothing,
-    branch = "gh-pages
+    branch = "gh-pages"
 )

@@ -1,3 +1,4 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 IMinuit = "beb75e20-2205-47e6-ad51-640e9c2309f1"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
