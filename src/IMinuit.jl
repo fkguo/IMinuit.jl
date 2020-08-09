@@ -10,7 +10,8 @@ using ForwardDiff: gradient
 
 export Minuit, migrad, minos, hesse, matrix, iminuit, args, model_fit, @model_fit
 export AbstractFit, Fit, ArrayFit, func_argnames, Data, chisq, @plt_data, @plt_data!, @plt_best, @plt_best!
-export gradient, LazyHelp
+export gradient, LazyHelp, contour, mncontour, mnprofile, draw_mncontour, profile,
+    draw_contour, draw_profile
 export get_contours, get_contours_all, contour_df, get_contours_given_parameter
 export contour_df_given_parameter, get_contours_samples, contour_df_samples
 
@@ -139,15 +140,24 @@ function args(o::AbstractFit)::Vector{Float64}
     return _res
 end
 
-# for f in [:migrad, :minos, :hesse, :matrix, :args, :contour, :mncontour, :mnprofile]
-#     sf = string(f)
-#     @eval @doc LazyHelp(mMinuit, $sf)  function $f(ars...; kws...) #function $f(args...; kws...)
-#         if !hasproperty(mMinuit, $sf)
-#             error("iminuit ", version, " does not have iminuit.Minuit", $sf)
-#         end
-#         return pycall(mMinuit.$sf, PyAny, ars...; kws...)
-#     end
-# end
+for fun in [:contour, :mncontour, :draw_contour, :draw_mncontour]
+    eval(:( ($fun)(f::AbstractFit, par1, par2; kws...) = f.$fun(par1, par2; kws...) ))
+end
+
+for fun in [:profile, :draw_profile]
+    eval(:( ($fun)(f::AbstractFit, par1; kws...) = f.$fun(par1; kws...) ))
+end
+
+
+for f in [:migrad, :minos, :hesse, :matrix, :args, :contour, :mncontour, :profile, :mnprofile, :draw_mncontour, :draw_contour, :draw_profile]
+    sf = string(f)
+    @eval @doc LazyHelp(mMinuit, $sf)  function $f(ars...; kws...) 
+        if !hasproperty(mMinuit, $sf)
+            error("iminuit ", version, " does not have iminuit.Minuit", $sf)
+        end
+        return pycall(mMinuit.$sf, PyAny, ars...; kws...)
+    end
+end
 
 #########################################################################
 
