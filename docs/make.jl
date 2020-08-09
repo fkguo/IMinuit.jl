@@ -1,5 +1,9 @@
-using IMinuit
 using Documenter
+
+ENV["PYTHON"] = ""
+
+using IMinuit
+
 
 makedocs(;
     modules=[IMinuit],
@@ -18,4 +22,8 @@ makedocs(;
 
 deploydocs(;
     repo="github.com/fkguo/IMinuit.jl",
+    target = "build",
+    deps = nothing,
+    make = nothing,
+    branch = "gh-pages
 )
