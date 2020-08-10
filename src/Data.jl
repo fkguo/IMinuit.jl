@@ -23,7 +23,7 @@ end
 Fields: `x, y, err, ndata`
 
 This defines a type for data with three columns:` x, y, err`; `ndata` is the number of data rows.
-Different `Data` sets can be concatenated as `vat(dat1, dat2, dat3)`.
+Different `Data` sets can be concatenated as `vcat(dat1, dat2, dat3)`.
 
 Only symmetric errors (of `y`) are supported.
 """

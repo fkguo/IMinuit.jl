@@ -7,7 +7,7 @@ Data(df::DataFrame)
 ```
 * Fields: `x, y, err, ndata`. This defines a type for data with three columns:` x, y, err`;
 * `ndata` is the number of data rows, automatically counted.
-* Different `Data` sets can be concatenated as `vat(dat1, dat2, dat3)`.
+* Different `Data` sets can be concatenated as `vcat(dat1, dat2, dat3)`.
 * `getindex` defined for `Data`, e.g., `data[1:10]` gives the first 10 points in `data`.
 
 

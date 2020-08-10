@@ -144,20 +144,20 @@ for fun in [:contour, :mncontour, :draw_contour, :draw_mncontour]
     eval(:( ($fun)(f::AbstractFit, par1, par2; kws...) = f.$fun(par1, par2; kws...) ))
 end
 
-for fun in [:profile, :draw_profile]
+for fun in [:profile, :draw_profile, :mnprofile, :draw_mnprofile]
     eval(:( ($fun)(f::AbstractFit, par1; kws...) = f.$fun(par1; kws...) ))
 end
 
 
-for f in [:migrad, :minos, :hesse, :matrix, :args, :contour, :mncontour, :profile, :mnprofile, :draw_mncontour, :draw_contour, :draw_profile]
-    sf = string(f)
-    @eval @doc LazyHelp(mMinuit, $sf)  function $f(ars...; kws...) 
-        if !hasproperty(mMinuit, $sf)
-            error("iminuit ", version, " does not have iminuit.Minuit", $sf)
-        end
-        return pycall(mMinuit.$sf, PyAny, ars...; kws...)
-    end
-end
+# for f in [:migrad, :minos, :hesse, :matrix, :args, :contour, :mncontour, :profile, :mnprofile, :draw_mncontour, :draw_contour, :draw_profile; :draw_mnprofile]
+#     sf = string(f)
+#     @eval @doc LazyHelp(mMinuit, $sf)  function $f(ars...; kws...) 
+#         if !hasproperty(mMinuit, $sf)
+#             error("iminuit ", version, " does not have iminuit.Minuit", $sf)
+#         end
+#         return pycall(mMinuit.$sf, PyAny, ars...; kws...)
+#     end
+# end
 
 #########################################################################
 

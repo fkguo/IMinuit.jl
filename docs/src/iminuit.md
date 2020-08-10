@@ -6,12 +6,11 @@ Minuit(fcn; kwds...)::Fit
 Minuit(fcn, start; kwds...)::ArrayFit
 ```
 
- Wrapper of the `iminuit` function `Minuit`.
- `fcn` is the function to be optimized.
- `start`: an array/tuple of the starting values of the parameters.
- `kwds` is the list of keywrod arguments of `Minuit`. For more information, refer to the [`iminuit` manual](https://iminuit.readthedocs.io/en/stable/about.html).
- The `Fit` one, for which `fcn` takes individual parameters as variables,  is generally
- faster than the `ArrayFit` one, for which `fcn` takes array parameters.
+ Wrapper of the `iminuit` function `Minuit`; for more information, refer to the [`iminuit` manual](https://iminuit.readthedocs.io/en/stable/about.html).
+ * `fcn` is the function to be optimized.
+ * `start`: an array/tuple of the starting values of the parameters.
+ * `kwds` is the list of keywrod arguments of `Minuit`. 
+ * For the `Fit` one, `fcn` takes individual parameters as variables; for the `ArrayFit` one, `fcn` takes array parameters.
 
 
 ## `migrad`, `hesse`, `minos`
@@ -25,7 +24,7 @@ wrappers of `iminuit.Minuit.migrad`, `iminuit.Minuit.minos`, `iminuit.Minuit.hes
 ```
 migrad(f::AbstractFit; ncall = 1000, resume = true, nsplit = 1, precision = nothing)
 ```
-minimizing using `MIGRAD`. Further information can be found by
+minimizing using `MIGRAD`. Further information (docstring from `iminuit`) can be found by
 ```@example
 using IMinuit # hide
 mMinuit = iminuit.Minuit # hide
@@ -101,8 +100,14 @@ For a fit `f`,
 ```
 f.contour(par1, par2; kws)
 f.mncontour(par1, par2; kws)
-f.mnprofile(par1; kws)
+f.draw_contour(par1, par2; kws)
+f.draw_mncontour(par1, par2; kws)
+f.profile(par1; kws)
+f.draw_profile(par1; kws)
 ```
+
+They can also be written as `contour(f, par1, par2; kws)` etc. Some docstrings from `iminuit`:
+
 ```@example
 using IMinuit # hide
 mMinuit = iminuit.Minuit # hide
