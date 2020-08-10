@@ -1,6 +1,6 @@
 # Example
 
-```@example
+```@example 1
 using IMinuit # hide
 fcn(x) = x[1]^2 + (x[2]-2)^2 + (x[3]-3.2)^4
 m = Minuit(fcn, [1,0,1]; name=["a", "b", "c"], error=0.1*ones(3), fix_a=true, limit_b=(0, 50) )
@@ -17,19 +17,10 @@ If `fcn` is defined as `fcn(a, b)`, then the starting values need to be set as
 `Minuit(fcn, a = 1, b = 0)`.
 
 The asymmetric errors can be obtained by using `minos`:
-```@example
-using IMinuit # hide
-fcn(x) = x[1]^2 + (x[2]-2)^2 + (x[3]-3.2)^4 # hide
-m = Minuit(fcn, [1,0,1]; name = ["a", "b", "c"], error = 0.1*ones(3), fix_a = true, limit_b = (0, 50) ) # hide
-migrad(m) # hide
+```@example 1
 minos(m)
 ```
 
-```@example
-using IMinuit # hide
-fcn(x) = x[1]^2 + (x[2]-2)^2 + (x[3]-3.2)^4 # hide
-m = Minuit(fcn, [1,0,1]; name = ["a", "b", "c"], error = 0.1*ones(3), fix_a = true, limit_b = (0, 50) ) # hide
-migrad(m) # hide
-minos(m) # hide
+```@example 1
 migrad(m)
 ```

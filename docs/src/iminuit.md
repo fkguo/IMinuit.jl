@@ -25,10 +25,10 @@ wrappers of `iminuit.Minuit.migrad`, `iminuit.Minuit.minos`, `iminuit.Minuit.hes
 migrad(f::AbstractFit; ncall = 1000, resume = true, nsplit = 1, precision = nothing)
 ```
 minimizing using `MIGRAD`. Further information (docstring from `iminuit`) can be found by
-```@example
+```@example 1
 using IMinuit # hide
 mMinuit = iminuit.Minuit # hide
-for f in [:migrad, :minos, :hesse, :matrix, :args] # hide
+for f in [:migrad, :minos, :hesse, :contour, :mncontour, :profile, :mnprofile] # hide
     sf = string(f) # hide
     @eval @doc LazyHelp(mMinuit, $sf)  function $f(ars...; kws...) #function $f(args...; kws...) # hide
        if !hasproperty(mMinuit, $sf) # hide
@@ -45,18 +45,7 @@ end # hide
 hesse(f::AbstractFit; maxcall = 0)
 ```
 run `HESSE` to compute parabolic errors.
-```@example
-using IMinuit # hide
-mMinuit = iminuit.Minuit # hide
-for f in [:migrad, :minos, :hesse, :matrix, :args] # hide
-    sf = string(f) # hide
-    @eval @doc LazyHelp(mMinuit, $sf)  function $f(ars...; kws...) #function $f(args...; kws...) # hide
-       if !hasproperty(mMinuit, $sf) # hide
-            error("iminuit ", version, " does not have iminuit.Minuit", $sf) # hide
-        end # hide
-        return pycall(mMinuit.$sf, PyAny, ars...; kws...) # hide
-    end # hide
-end # hide
+```@example 1
 @doc hesse
 ```
 
@@ -65,18 +54,7 @@ end # hide
 minos(f::AbstractFit; var = nothing, sigma = 1, maxcall = 0)
 ```
 run `MINOS` to compute asymmetric errors taking into account correlation and nonlinearity
-```@example
-using IMinuit # hide
-mMinuit = iminuit.Minuit # hide
-for f in [:migrad, :minos, :hesse, :matrix, :args] # hide
-    sf = string(f) # hide
-    @eval @doc LazyHelp(mMinuit, $sf)  function $f(ars...; kws...) #function $f(args...; kws...) # hide
-       if !hasproperty(mMinuit, $sf) # hide
-            error("iminuit ", version, " does not have iminuit.Minuit", $sf) # hide
-        end # hide
-        return pycall(mMinuit.$sf, PyAny, ars...; kws...) # hide
-    end # hide
-end # hide
+```@example 1
 @doc minos
 ```
 
@@ -108,48 +86,15 @@ f.draw_profile(par1; kws)
 
 They can also be written as `contour(f, par1, par2; kws)` etc. Some docstrings from `iminuit`:
 
-```@example
-using IMinuit # hide
-mMinuit = iminuit.Minuit # hide
-for f in [:contour] # hide
-    sf = string(f) # hide
-    @eval @doc LazyHelp(mMinuit, $sf)  function $f(ars...; kws...) #function $f(args...; kws...) # hide
-       if !hasproperty(mMinuit, $sf) # hide
-            error("iminuit ", version, " does not have iminuit.Minuit", $sf) # hide
-        end # hide
-        return pycall(mMinuit.$sf, PyAny, ars...; kws...) # hide
-    end # hide
-end # hide
+```@example 1
 @doc contour
 ```
 
-```@example
-using IMinuit # hide
-mMinuit = iminuit.Minuit # hide
-for f in [:mncontour] # hide
-    sf = string(f) # hide
-    @eval @doc LazyHelp(mMinuit, $sf)  function $f(ars...; kws...) #function $f(args...; kws...) # hide
-       if !hasproperty(mMinuit, $sf) # hide
-            error("iminuit ", version, " does not have iminuit.Minuit", $sf) # hide
-        end # hide
-        return pycall(mMinuit.$sf, PyAny, ars...; kws...) # hide
-    end # hide
-end # hide
+```@example 1
 @doc mncontour
 ```
 
-```@example
-using IMinuit # hide
-mMinuit = iminuit.Minuit # hide
-for f in [:mnprofile] # hide
-    sf = string(f) # hide
-    @eval @doc LazyHelp(mMinuit, $sf)  function $f(ars...; kws...) #function $f(args...; kws...) # hide
-       if !hasproperty(mMinuit, $sf) # hide
-            error("iminuit ", version, " does not have iminuit.Minuit", $sf) # hide
-        end # hide
-        return pycall(mMinuit.$sf, PyAny, ars...; kws...) # hide
-    end # hide
-end # hide
+```@example 1
 @doc mnprofile
 ```
 

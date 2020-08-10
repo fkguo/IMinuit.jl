@@ -19,5 +19,6 @@ Data(df::DataFrame)
 @plt_best!(dist, fit, data, kws...)
 ```
 convenient macros for plotting the data, and a comparison of the best-fit curve
-with the data (needs `using Plots`). `kwds...` in `@plt_data` adjusts settings of the `scatter` plot, and that in `@plt_best` adjusts settings of the best-fit curve `plot`.
-For `@plt_best` and `@plt_best!`, the ordering of `dist`, `fit`, and `data` does not matter, i.e., `@plt_best dist fit data`,  `@plt_best fit dist data`, `@plt_best fit data dist` and so on all work.
+with the data (needs `using Plots`). 
+- `kwds...` in `@plt_data` adjusts settings of the `scatter` plot, and that in `@plt_best` adjusts settings of the best-fit curve `plot`.
+- For `@plt_best` and `@plt_best!`, the ordering of `dist`, `fit`, and `data` does not matter, i.e., `@plt_best dist fit data`,  `@plt_best fit dist data`, `@plt_best fit data dist` and so on all work.
