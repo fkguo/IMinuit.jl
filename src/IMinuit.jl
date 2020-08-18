@@ -166,13 +166,13 @@ include("contour.jl")
 
 #########################################################################
 
+
 """
     model_fit(model::Function, data::Data, start_values; kws...)
 
-convenient wrapper, the returning stype is `ArrayFit`, which can be passed
+convenient wrapper for fitting a `model` to `data`; the returning stype is `ArrayFit`, which can be passed
 to `migrad`, `minos` etc.
-* `model` is the function to be fitted to `data`; it should be of the form
-`model(x, params)` with `params` given either as an array or a tuple.
+* `model` is the function to be fitted to `data`; it should be of the form `model(x, params)` with `params` given either as an array or a tuple.
 """
 function model_fit(model::Function, data::Data, start_values; kws...)
     # _model(x, par) = length(func_argnames(model)) > 2 ? model(x, par...) : model(x, par)
@@ -184,10 +184,7 @@ end
 """
     @model_fit model data start_values kws...
 
-convenient wrapper, the returning stype is `ArrayFit`, which can be passed
-to `migrad`, `minos` etc.
-* `model` is the function to be fitted to `data`; it should be of the form
-`model(x, params)` with `params` given either as an array or a tuple.
+convenient wrapper for fitting a `model` to `data`; see [`model_fit`](@ref).
 """
 macro model_fit(model, data, start_values, kws...)
     _expr = quote
@@ -196,5 +193,6 @@ macro model_fit(model, data, start_values, kws...)
     end
     esc(_expr)
 end
+
 
 end

@@ -158,9 +158,12 @@ end
 
 
 """
-    get_contours_given_parameter(fit::Fit, χsq, para::T, range) where {T <: Union{Symbol, String}}
+    get_contours_given_parameter(fit::AbstractFit, χsq, para::T, range) 
+        where {T <: Union{Symbol, String}}
 
 gives parameter sets in one sigma for a given parameter constrained in a range.
+If `fit` is an `ArrayFit` and no user-defined names have been given to the parameters, 
+then `para` is `"x0"` or `:x0` for the 1st parameter, `"x1"` or `:x1` for the 2nd parameter, ...
 """
 function get_contours_given_parameter(fit::Fit, χsq, para::T, range) where {T <: Union{Symbol, String}}
     fit.migrad_ok() || fit.migrad();        # if migrad has not been run then run it first
@@ -187,13 +190,7 @@ function get_contours_given_parameter(fit::Fit, χsq, para::T, range) where {T <
     return container
 end
 
-"""
-    get_contours_given_parameter(fit::ArrayFit, χsq, para::T, range) where {T <: Union{Symbol, String}}
 
-gives parameter sets in one sigma for a given parameter constrained in a range.
-If no user-defined names have been given to the parameters, `para` is then `"x0"`
-or `:x0` for the 1st parameter, `"x1"` or `:x1` for the 2nd parameter, ...
-"""
 function get_contours_given_parameter(fit::ArrayFit, χsq, para::T, range) where {T <: Union{Symbol, String}}
     fit.migrad_ok() || fit.migrad();        # if migrad has not been run then run it first
     length(fit.merrors) == 0 && fit.minos() # if minos has not been run then run it first
@@ -222,10 +219,12 @@ function get_contours_given_parameter(fit::ArrayFit, χsq, para::T, range) where
 end
 
 
-"""
+@doc """
     contour_df_given_parameter(fit::AbstractFit, χsq, para::T, range; limits = true) where {T <: Union{Symbol, String}}
 
 return parameter sets in one sigma for a given parameter constrained in a range as a `DataFrame`.
+
+See also [`get_contours_given_parameter`](@ref).
 """
 function contour_df_given_parameter(fit::AbstractFit, χsq, para::T, range; limits = true) where {T <: Union{Symbol, String}}
     parameters =  get_contours_given_parameter(fit, χsq, para, range)

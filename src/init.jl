@@ -10,14 +10,14 @@ const iminuit_version = "iminuit" # this has to be at least 1.4.1
 # can be automatically installed by pyimport_conda.
 function __init__()
     copy!(iminuit, pyimport_conda("iminuit", iminuit_version, "conda-forge"))
-    _version = iminuit.:version.__version__
+    # _version = iminuit.:version.__version__
     # if _version < "1.4.1"
     #     println("iminuit version" * _version * "1.4.1. It will be updated now.")
     #     run(`conda update iminit -c conda-forge`) # this updates the sys. conda, not the julia one.
     #     copy!(iminuit, pyimport_conda("iminuit", iminuit_version, "conda-forge"))
     #     _version = iminuit.:version.__version__
     # end
-    println("iminuit version " * _version * " has been imported as `iminuit`." )
+    # println("iminuit version " * _version * " has been imported as `iminuit`." )
     copy!(mMinuit, pyimport_conda("iminuit", iminuit_version, "conda-forge").:Minuit)
     # The following converts the ArgsView type to Vector{Float64}, but takes too much time
     # it takes more than 50 μs
