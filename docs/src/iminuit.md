@@ -4,13 +4,15 @@
 ```
 Minuit(fcn; kwds...)::Fit
 Minuit(fcn, start; kwds...)::ArrayFit
+Minuit(fcn, m::AbatractFit; kwds...)
 ```
 
  Wrapper of the `iminuit` function `Minuit`; for more information, refer to the [`iminuit` manual](https://iminuit.readthedocs.io/en/stable/about.html).
  * `fcn` is the function to be optimized.
  * `start`: an array/tuple of the starting values of the parameters.
- * `kwds` is the list of keywrod arguments of `Minuit`. 
+ * `kwds` is the list of keyword arguments of `Minuit`. 
  * For the `Fit` one, `fcn` takes individual parameters as variables; for the `ArrayFit` one, `fcn` takes array parameters.
+ * `m`: a fit (either `Fit` or `ArrayFit`) that was previously defined; its parameters at the latest stage can be passed to the new fit.
 
 
 ## `migrad`, `hesse`, `minos`

@@ -83,11 +83,13 @@ include("FitStructs.jl")
 @doc raw"""
     Minuit(fcn; kwds...)
     Minuit(fcn, start; kwds...)
+    Minuit(fcn, m::AbatractFit; kwds...)
 
 Wrapper of the `iminuit` function `Minuit`.
 * `fcn` is the function to be optimized.
 * `start`: an array/tuple of the starting values of the parameters.
-* `kwds` is the list of keywrod arguments of `Minuit`. For more information, refer to the `iminuit` manual.
+* `kwds` is the list of keyword arguments of `Minuit`. For more information, refer to the `iminuit` manual.
+* `m`: a fit that was previously defined; its parameters at the latest stage can be passed to the new fit.
 
 Example:
 ```
@@ -115,6 +117,9 @@ end
 
 Minuit(fcn, start::AbstractVector; kwds...)::ArrayFit =  iminuit.Minuit.from_array_func(fcn, start; pedantic = false, kwds...)
 Minuit(fcn, start::Tuple; kwds...)::ArrayFit =  iminuit.Minuit.from_array_func(fcn, start; pedantic = false, kwds...)
+
+Minuit(fcn, m::ArrayFit; kwd...) = Minuit(fcn, args(m); (Symbol(k) => v for (k,v) in m.fitarg)...,  kwd...)
+Minuit(fcn, m::Fit; kwd...) = Minuit(fcn; (Symbol(k) => v for (k,v) in m.fitarg)...,  kwd...)
 
 function migrad(f::AbstractFit; ncall = 1000, resume = true, nsplit = 1, precision = nothing)
     return pycall(f.migrad, PyObject, ncall, resume, nsplit, precision)
@@ -149,15 +154,15 @@ for fun in [:profile, :draw_profile, :mnprofile, :draw_mnprofile]
 end
 
 
-for f in [:migrad, :minos, :hesse, :matrix, :args, :contour, :mncontour, :profile, :mnprofile, :draw_mncontour, :draw_contour, :draw_profile, :draw_mnprofile]
-    sf = string(f)
-    @eval @doc LazyHelp(mMinuit, $sf)  function $f(ars...; kws...) 
-        if !hasproperty(mMinuit, $sf)
-            error("iminuit ", version, " does not have iminuit.Minuit", $sf)
-        end
-        return pycall(mMinuit.$sf, PyAny, ars...; kws...)
-    end
-end
+# for f in [:migrad, :minos, :hesse, :matrix, :args, :contour, :mncontour, :profile, :mnprofile, :draw_mncontour, :draw_contour, :draw_profile, :draw_mnprofile]
+#     sf = string(f)
+#     @eval @doc LazyHelp(mMinuit, $sf)  function $f(ars...; kws...) 
+#         if !hasproperty(mMinuit, $sf)
+#             error("iminuit ", version, " does not have iminuit.Minuit", $sf)
+#         end
+#         return pycall(mMinuit.$sf, PyAny, ars...; kws...)
+#     end
+# end
 
 #########################################################################
 
