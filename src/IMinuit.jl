@@ -30,14 +30,16 @@ end
 function show(io::IO, ::MIME"text/plain", h::LazyHelp)
     o = h.o
     for k in h.keys
-        o = getproperty(o, k) # o[k]
+        o = getproperty(o, k) 
     end
     if hasproperty(o, "__doc__")
+        print(io, "Docstring pulled from the Python `iminuit`:\n\n")
         print(io, convert(AbstractString, o."__doc__"))
     else
         print(io, "no Python docstring found for ", h.k)
     end
 end
+
 Base.show(io::IO, h::LazyHelp) = show(io, "text/plain", h)
 function Base.Docs.catdoc(hs::LazyHelp...)
     Base.Docs.Text() do io
@@ -48,11 +50,12 @@ function Base.Docs.catdoc(hs::LazyHelp...)
 end
 
 
-"""
+@doc raw"""
     method_argnames(m::Method)
 
-    Extracting the argument names of a method as an array.
-    Modified from [`methodshow.jl`](https://github.com/JuliaLang/julia/blob/master/base/methodshow.jl) (`Vector{Any}`` changed to `Vector{Symbol}`)
+Extracting the argument names of a method as an array.
+Modified from [`methodshow.jl`](https://github.com/JuliaLang/julia/blob/master/base/methodshow.jl) 
+(`Vector{Any}` changed to `Vector{Symbol}`).
 """
 function method_argnames(m::Method)
     argnames = ccall(:jl_uncompress_argnames, Vector{Symbol}, (Any,), m.slot_syms)
@@ -63,7 +66,7 @@ end
 """
     func_argnames(f::Function)
 
-    Extracting the argument names of a function as an array.
+Extracting the argument names of a function as an array.
 """
 function func_argnames(f::Function)
     ms = collect(methods(f))
@@ -98,7 +101,8 @@ fit = Minuit(fcn, [1, 0]; name = ["a", "b"], error = 0.1*ones(2),
 migrad(fit)
 ```
 where the parameters are collected in an array `par` which is the argument of `fcn(par)`. In this case,
-one can use external code (e.g., `using ForwardDiff: gradient`) to compute the gradient as `gradfun(par) = gradient(fcn, par)`, and include `grad = gradfun` as a keyword argument.
+one can use external code (e.g., `using ForwardDiff: gradient`) to compute the gradient as 
+`gradfun(par) = gradient(fcn, par)`, and include `grad = gradfun` as a keyword argument.
 
 
 If `fcn` is defined as `fcn(a, b)`, then the starting values need to be
@@ -118,8 +122,8 @@ end
 Minuit(fcn, start::AbstractVector; kwds...)::ArrayFit =  iminuit.Minuit.from_array_func(fcn, start; pedantic = false, kwds...)
 Minuit(fcn, start::Tuple; kwds...)::ArrayFit =  iminuit.Minuit.from_array_func(fcn, start; pedantic = false, kwds...)
 
-Minuit(fcn, m::ArrayFit; kwd...) = Minuit(fcn, args(m); (Symbol(k) => v for (k,v) in m.fitarg)...,  kwd...)
-Minuit(fcn, m::Fit; kwd...) = Minuit(fcn; (Symbol(k) => v for (k,v) in m.fitarg)...,  kwd...)
+Minuit(fcn, m::ArrayFit; kwds...) = Minuit(fcn, args(m); (Symbol(k) => v for (k,v) in m.fitarg)...,  kwds...)
+Minuit(fcn, m::Fit; kwds...) = Minuit(fcn; (Symbol(k) => v for (k,v) in m.fitarg)...,  kwds...)
 
 function migrad(f::AbstractFit; ncall = 1000, resume = true, nsplit = 1, precision = nothing)
     return pycall(f.migrad, PyObject, ncall, resume, nsplit, precision)
@@ -146,23 +150,24 @@ function args(o::AbstractFit)::Vector{Float64}
 end
 
 for fun in [:contour, :mncontour, :draw_contour, :draw_mncontour]
-    eval(:( ($fun)(f::AbstractFit, par1, par2; kws...) = f.$fun(par1, par2; kws...) ))
+    :( ($fun)(f::AbstractFit, par1, par2; kws...) = f.$fun(par1, par2; kws...) ) |> eval
 end
 
 for fun in [:profile, :draw_profile, :mnprofile, :draw_mnprofile]
-    eval(:( ($fun)(f::AbstractFit, par1; kws...) = f.$fun(par1; kws...) ))
+    :( ($fun)(f::AbstractFit, par1; kws...) = f.$fun(par1; kws...) ) |> eval
 end
 
 
-for f in [:migrad, :minos, :hesse, :matrix, :args, :contour, :mncontour, :profile, :mnprofile, :draw_mncontour, :draw_contour, :draw_profile, :draw_mnprofile]
-    sf = string(f)
-    @eval @doc LazyHelp(mMinuit, $sf)  function $f(ars...; kws...) 
-        if !hasproperty(mMinuit, $sf)
-            error("iminuit ", version, " does not have iminuit.Minuit", $sf)
-        end
-        return pycall(mMinuit.$sf, PyAny, ars...; kws...)
-    end
-end
+# for f in [:migrad, :minos, :hesse, :matrix, :args, :contour, :mncontour, :profile, 
+#           :mnprofile, :draw_mncontour, :draw_contour, :draw_profile, :draw_mnprofile]
+#     sf = string(f)
+#     @eval @doc LazyHelp(mMinuit, $sf)  function $f(ars...; kws...) 
+#         if !hasproperty(mMinuit, $sf)
+#             error("iminuit ", version, " does not have iminuit.Minuit", $sf)
+#         end
+#         return pycall(mMinuit.$sf, PyAny, ars...; kws...)
+#     end
+# end
 
 #########################################################################
 
