@@ -2,7 +2,8 @@ using Combinatorics: combinations
 using StatsBase: sample
 
 @doc raw"""
-    get_contours(fit::AbstractFit, χsq, parameters_combination::Vector{Int}; npts::Int=20, limits=true, sigma = 1.0)
+    get_contours(fit::AbstractFit, χsq, parameters_combination::Vector{Int}; 
+                 npts::Int=20, limits=true, sigma = 1.0)
 
 For a given fit `fit` and the ``\chi^2`` function `χsq`, gives an array of parameter arrays,
 with each array corresponding to a set of parameters obtained from calculating the `MINOS` ``1σ`` contour
@@ -15,8 +16,8 @@ If `limits` is `true`, then fix one parameter to its bounds from `MINOS` of the 
 the other parameters; this runs over all parameters.
 """
 function get_contours(fit::Fit, χsq, parameters_combination::Vector{Int}; npts::Int=20, limits=true, sigma = 1.0)
-    fit.migrad_ok() || fit.migrad();        # if migrad has not been run then run it first
-    length(fit.merrors) == 0 && fit.minos() # if minos has not been run then run it first
+    fit.migrad_ok() || migrad(fit);        # if migrad has not been run then run it first
+    length(fit.merrors) == 0 && minos(fit) # if minos has not been run then run it first
     fmin_1σ = fit.fval + 1.0;   # χsq from the previous best fit + 1.0
     tol = 0.05  # tolerance allowing χ² to be ≤  fmin_1σ + tol
     # setting the parameters to the the best ones from the previous fit
@@ -37,8 +38,8 @@ function get_contours(fit::Fit, χsq, parameters_combination::Vector{Int}; npts:
             if !kwdarg[Symbol(:fix_, a)]
                 _fit1 = Minuit(χsq; kwdarg..., a => kwdarg[Symbol(:limit_, a)][1], Symbol("fix_", a) => true)
                 _fit2 = Minuit(χsq; kwdarg..., a => kwdarg[Symbol(:limit_, a)][2], Symbol("fix_", a) => true)
-                _fit1.strategy = 1; _fit1.migrad()
-                _fit2.strategy = 1; _fit2.migrad()
+                _fit1.strategy = 1; migrad(_fit1)
+                _fit2.strategy = 1; migrad(_fit2)
                 _fit1.fval  < fmin_1σ + tol && push!(container, vcat(_fit1.fval, args(_fit1)) )
                 _fit2.fval  < fmin_1σ + tol && push!(container, vcat(_fit2.fval, args(_fit2)) )
             end
@@ -54,7 +55,7 @@ function get_contours(fit::Fit, χsq, parameters_combination::Vector{Int}; npts:
         dict = Dict(zip((para1, para2), pa) ) # using dict to overwrite those in kwdarg
         _fit1 = Minuit(χsq; kwdarg..., dict...,  #errordef=1,
                   Symbol("fix_", para1) => true, Symbol("fix_", para2) => true)
-        _fit1.strategy = 1; _fit1.migrad()
+        _fit1.strategy = 1; migrad(_fit1)
         # filtering only those with χ² in 1σ
         _fit1.fval  < fmin_1σ + tol && push!(container, vcat(_fit1.fval, args(_fit1)) )
     end
@@ -64,8 +65,8 @@ end
 
 
 function get_contours(fit::ArrayFit, χsq, parameters_combination::Vector{Int}; npts::Int=20, limits=true, sigma = 1.0)
-    fit.migrad_ok() || fit.migrad();        # if migrad has not been run then run it first
-    length(fit.merrors) == 0 && fit.minos() # if minos has not been run then run it first
+    fit.migrad_ok() || migrad(fit);        # if migrad has not been run then run it first
+    length(fit.merrors) == 0 && minos(fit) # if minos has not been run then run it first
     fmin_1σ = fit.fval + 1.0;   # χsq from the previous best fit + 1.0
     tol = 0.05  # tolerance allowing χ² to be ≤  fmin_1σ + tol
     # setting the parameters to the the best ones from the previous fit
@@ -92,8 +93,8 @@ function get_contours(fit::ArrayFit, χsq, parameters_combination::Vector{Int}; 
                 _fit1 = Minuit(χsq, start_array; name = _args, kwdarg..., Symbol("fix_", a) => true)
                 start_array[i] = kwdarg[Symbol(:limit_, a)][2]
                 _fit2 = Minuit(χsq, start_array; name = _args, kwdarg..., Symbol("fix_", a) => true)
-                _fit1.strategy = 1; _fit1.migrad()
-                _fit2.strategy = 1; _fit2.migrad()
+                _fit1.strategy = 1; migrad(_fit1)
+                _fit2.strategy = 1; migrad(_fit2)
                 _fit1.fval  < fmin_1σ + tol && push!(container, vcat(_fit1.fval, args(_fit1)) )
                 _fit2.fval  < fmin_1σ + tol && push!(container, vcat(_fit2.fval, args(_fit2)) )
             end
@@ -110,7 +111,7 @@ function get_contours(fit::ArrayFit, χsq, parameters_combination::Vector{Int}; 
         # start_array[parameters_combination[2]] = pa[2]
         _fit1 = Minuit(χsq, start_array; name = _args, kwdarg..., # dict...,  #errordef=1,
                   Symbol("fix_", para1) => true, Symbol("fix_", para2) => true)
-        _fit1.strategy = 1; _fit1.migrad()
+        _fit1.strategy = 1; migrad(_fit1)
         # filtering only those with χ² in 1σ
         _fit1.fval  < fmin_1σ + tol && push!(container, vcat(_fit1.fval, args(_fit1)) )
     end
@@ -150,7 +151,7 @@ function contour_df(fit::AbstractFit, χsq; npts=20, limits=true, sigma = 1.0)
     argnames = Array{Symbol,1}(undef, fit.narg)
     @. argnames = Symbol(fit.parameters)
     try
-        DataFrame( collect.(eachrow(df0)), vcat(:χ², argnames) )
+        DataFrame( collect.(eachrow(df0)), vcat(:chisq, argnames) )
     catch
         @warn "No parameter sets were found."
     end
@@ -166,8 +167,8 @@ If `fit` is an `ArrayFit` and no user-defined names have been given to the param
 then `para` is `"x0"` or `:x0` for the 1st parameter, `"x1"` or `:x1` for the 2nd parameter, ...
 """
 function get_contours_given_parameter(fit::Fit, χsq, para::T, range) where {T <: Union{Symbol, String}}
-    fit.migrad_ok() || fit.migrad();        # if migrad has not been run then run it first
-    length(fit.merrors) == 0 && fit.minos() # if minos has not been run then run it first
+    fit.migrad_ok() || migrad(fit);        # if migrad has not been run then run it first
+    length(fit.merrors) == 0 && minos(fit) # if minos has not been run then run it first
     fmin_1σ = fit.fval + 1.0;   # χsq from the previous best fit + 1.0
     # setting the parameters to the the best ones from the previous fit
     kwdarg = Dict{Symbol, Any}(Symbol(k) => v for (k,v) in fit.fitarg)
@@ -192,8 +193,8 @@ end
 
 
 function get_contours_given_parameter(fit::ArrayFit, χsq, para::T, range) where {T <: Union{Symbol, String}}
-    fit.migrad_ok() || fit.migrad();        # if migrad has not been run then run it first
-    length(fit.merrors) == 0 && fit.minos() # if minos has not been run then run it first
+    fit.migrad_ok() || migrad(fit);        # if migrad has not been run then run it first
+    length(fit.merrors) == 0 && minos(fit) # if minos has not been run then run it first
     fmin_1σ = fit.fval + 1.0;   # χsq from the previous best fit + 1.0
     # setting the parameters to the the best ones from the previous fit
     start_array = args(fit) #PyVector{Real}(fit.args) # does not support assignment
@@ -211,7 +212,7 @@ function get_contours_given_parameter(fit::ArrayFit, χsq, para::T, range) where
     for a in range
         start_array[findfirst(x-> x == Symbol(para), _args)] = a
         _fit1 = Minuit(χsq, start_array; name = _args, kwdarg..., Symbol(:fix_, para) => true)
-        _fit1.strategy = 2; _fit1.migrad()
+        _fit1.strategy = 2; migrad(_fit1)
         _fit1.fval  ≤ fmin_1σ && push!(container, vcat(_fit1.fval, args(_fit1)) )
     end
 
@@ -220,7 +221,8 @@ end
 
 
 @doc """
-    contour_df_given_parameter(fit::AbstractFit, χsq, para::T, range; limits = true) where {T <: Union{Symbol, String}}
+    contour_df_given_parameter(fit::AbstractFit, χsq, para::T, range; limits = true) 
+        where {T <: Union{Symbol, String}}
 
 return parameter sets in one sigma for a given parameter constrained in a range as a `DataFrame`.
 
@@ -232,7 +234,7 @@ function contour_df_given_parameter(fit::AbstractFit, χsq, para::T, range; limi
     argnames = Array{Symbol,1}(undef, fit.narg)
     @. argnames = Symbol(fit.parameters)
     try
-        DataFrame( collect.(eachrow(df0)), vcat(:χ², argnames) )
+        DataFrame( collect.(eachrow(df0)), vcat(:chisq, argnames) )
     catch
         @warn "No parameter sets were found in the given range of $para. Try another range."
     end
@@ -252,8 +254,8 @@ and values for the parameters given in `paras` are randomly sampled in the given
 `paras` should be given such that `"x0"` or `:x0` for the 1st parameter, `"x1"` or `:x1` for the 2nd parameter, ...
 """
 function get_contours_samples(fit::Fit, χsq, paras, ranges; nsamples = 100, MNbounds = true, igrad = false)
-    fit.migrad_ok() || fit.migrad();        # if migrad has not been run then run it first
-    length(fit.merrors) == 0 && fit.minos() # if minos has not been run then run it first
+    fit.migrad_ok() || migrad(fit);        # if migrad has not been run then run it first
+    length(fit.merrors) == 0 && minos(fit) # if minos has not been run then run it first
     fmin_1σ = fit.fval + 1.0;   # χsq from the previous best fit + 1.0
     # setting the parameters to the the best ones from the previous fit
     kwdarg = Dict{Symbol, Any}(Symbol(k) => v for (k,v) in fit.fitarg)
@@ -291,7 +293,7 @@ function get_contours_samples(fit::Fit, χsq, paras, ranges; nsamples = 100, MNb
             pdict = Dict(zip(paras, p))
             _fit1 = Minuit(χsq; kwdarg..., pdict..., pfix..., grad = gradf)
         end
-        _fit1.strategy = 1; _fit1.migrad()
+        _fit1.strategy = 1; migrad(_fit1)
         _fit1.fval  ≤ fmin_1σ && push!(container, vcat(_fit1.fval, args(_fit1)) )
     end
 
@@ -300,8 +302,8 @@ end
 
 
 function get_contours_samples(fit::ArrayFit, χsq, paras, ranges; nsamples = 100, MNbounds = true, igrad = false)
-    fit.migrad_ok() || fit.migrad();        # if migrad has not been run then run it first
-    length(fit.merrors) == 0 && fit.minos() # if minos has not been run then run it first
+    fit.migrad_ok() || migrad(fit);        # if migrad has not been run then run it first
+    length(fit.merrors) == 0 && minos(fit) # if minos has not been run then run it first
     fmin_1σ = fit.fval + 1.0;   # χsq from the previous best fit + 1.0
     # setting the parameters to the the best ones from the previous fit
     start_array = args(fit)
@@ -342,7 +344,7 @@ function get_contours_samples(fit::ArrayFit, χsq, paras, ranges; nsamples = 100
             end
             _fit1 = Minuit(χsq, start_array; name = _args, kwdarg..., pfix..., grad = gradf)
         end
-        _fit1.strategy = 1; _fit1.migrad()
+        _fit1.strategy = 1; migrad(_fit1)
         _fit1.fval  ≤ fmin_1σ && push!(container, vcat(_fit1.fval, args(_fit1)) )
     end
 
@@ -365,7 +367,7 @@ function contour_df_samples(fit::AbstractFit, χsq, paras, ranges; nsamples = 10
     argnames = Array{Symbol,1}(undef, fit.narg)
     @. argnames = Symbol(fit.parameters)
     try
-        DataFrame( collect.(eachrow(df0)), vcat(:χ², argnames) )
+        DataFrame( collect.(eachrow(df0)), vcat(:chisq, argnames) )
     catch
         @warn "No parameter sets were found in the given ranges of $para. Try another ranges."
     end
