@@ -183,6 +183,7 @@ include("contour.jl")
 convenient wrapper for fitting a `model` to `data`; the returning stype is `ArrayFit`, which can be passed
 to `migrad`, `minos` etc.
 * `model` is the function to be fitted to `data`; it should be of the form `model(x, params)` with `params` given either as an array or a tuple.
+* `start_values` can be either the initial values of parameters (`<: AbstractArray` or `<:Tuple`) or a previous fit of type `AbstractFit`.
 """
 function model_fit(model::Function, data::Data, start_values; kws...)
     # _model(x, par) = length(func_argnames(model)) > 2 ? model(x, par...) : model(x, par)
