@@ -125,8 +125,9 @@ Minuit(fcn, start::Tuple; kwds...)::ArrayFit =  iminuit.Minuit.from_array_func(f
 Minuit(fcn, m::ArrayFit; kwds...) = Minuit(fcn, args(m); (Symbol(k) => v for (k,v) in m.fitarg)...,  kwds...)
 Minuit(fcn, m::Fit; kwds...) = Minuit(fcn; (Symbol(k) => v for (k,v) in m.fitarg)...,  kwds...)
 
-function migrad(f::AbstractFit; ncall = 1000, resume = true, nsplit = 1, precision = nothing)
-    return pycall(f.migrad, PyObject, ncall, resume, nsplit, precision)
+# nsplit = 1, nsplit option removed since iminuit v1.5.0
+function migrad(f::AbstractFit; ncall = 1000, resume = true, precision = nothing) 
+    return pycall(f.migrad, PyObject, ncall, resume, precision)
 end
 
 
