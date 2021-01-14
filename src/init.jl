@@ -11,7 +11,7 @@ const iminuit_version = "iminuit" # "iminuit=1.4.9"
 function __init__()
     copy!(iminuit, pyimport_conda("iminuit", iminuit_version, "conda-forge"))
     _version = iminuit.__version__
-    if (_version < "1.5.0" or _version >= "1.6") 
+    if (_version < "1.5.0" || _version >= "1.6") 
         println("The current iminuit version is " * _version * ". It will be changed to version 1.5.4.")
         run(`conda install iminuit=1.5.4 -c conda-forge`) # this updates the sys. conda, not the julia one.
     #     copy!(iminuit, pyimport_conda("iminuit", iminuit_version, "conda-forge"))
