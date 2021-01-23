@@ -2,7 +2,7 @@
 
 const iminuit = PyNULL()
 const mMinuit = PyNULL()
-const iminuit_version = "iminuit" # "iminuit=1.4.9"
+const iminuit_version = "iminuit=1.5.4" 
 
 # initialization -- anything that depends on Python has to go here,
 # so that it occurs at runtime (while the rest can be precompiled).
