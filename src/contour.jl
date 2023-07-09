@@ -71,7 +71,8 @@ function get_contours(fit::Fit, χsq, parameters_combination::Vector{Int}; npts:
                 _fit1 = Minuit(χsq; ini_value)
                 _fit2 = Minuit(χsq; ini_value)
 
-                _fit1.o.values[i], _fit2.o.values[i] = _limits[i]
+                _fit1.values[i] = _limits[i][1]
+                _fit2.values[i] = _limits[i][2]
                 copy_state!(fit, _fit1, 6)
                 copy_state!(fit, _fit2, 6)
                 _fit1.o.fixed[i] = true
