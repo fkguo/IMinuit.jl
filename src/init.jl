@@ -2,7 +2,7 @@
 
 const iminuit = PyNULL()
 const mMinuit = PyNULL()
-const iminuit_version = "iminuit=1.5.4"
+const iminuit_version = "iminuit=2.18.0"
 
 # initialization -- anything that depends on Python has to go here,
 # so that it occurs at runtime (while the rest can be precompiled).
@@ -22,4 +22,5 @@ function __init__()
     # The following converts the ArgsView type to Vector{Float64}, but takes too much time
     # it takes more than 50 μs
     # pytype_mapping(minuit._libiminuit.ArgsView, Vector{Float64})
+    println("initiated!!")
 end

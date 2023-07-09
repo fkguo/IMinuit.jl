@@ -14,6 +14,7 @@ export gradient, LazyHelp, contour, mncontour, mnprofile, draw_mncontour, profil
 draw_contour, draw_profile
 export get_contours, get_contours_all, contour_df, get_contours_given_parameter
 export contour_df_given_parameter, get_contours_samples, contour_df_samples
+export reset
 
 # copied from PyPlot.jl
 # that lazily looks up help from a PyObject via zero or more keys.
@@ -219,9 +220,17 @@ end
 for fun in [:contour, :mncontour, :draw_contour, :draw_mncontour]
   :(($fun)(f::AbstractFit, par1, par2; kws...) = f.$fun(par1, par2; kws...)) |> eval
 end
+#fix for incorrect parameters
+for fun in [:mncontour, :draw_mncontour]
+  :(($fun)(f::AbstractFit, par1, par2; numpoints = 100, sigma = 1, kws...) = f.$fun(par1, par2; cl = sigma, size = numpoints, kws...)) |> eval
+end
 
 for fun in [:profile, :draw_profile, :mnprofile, :draw_mnprofile]
   :(($fun)(f::AbstractFit, par1; kws...) = f.$fun(par1; kws...)) |> eval
+end
+#fix for incorrect parameters
+for fun in [:profile, :draw_profile, :mnprofile, :draw_mnprofile]
+  :(($fun)(f::AbstractFit, par1; numpoints = 100, sigma = 1, kws...) = f.$fun(par1; cl = sigma, size = numpoints, kws...)) |> eval
 end
 
 
