@@ -141,11 +141,15 @@ function preprocess(fcn; kwds...)
   len = length(args)
   stored_kwds = Dict(str => nothing for str in removed)
   new_kwds = Vector()
-  foo = Dict{String, Array{Union{Float64, Bool, Tuple{Float64, Float64}}}}()
+  foo = Dict{String, Array{Union{Float64, Bool, Tuple}}}()
   foo["error"] = Array{Float64}(undef, len)
   foo["limit"] = fill((-Inf64, Inf64), len)
   foo["fix"] = falses(len)
+  # println(kwds)
   for (k, v) in kwds
+    if v === nothing
+      continue
+    end
     k_str = String(k)
     if k_str in removed
     	stored_kwds[k_str] = v
@@ -162,7 +166,16 @@ function preprocess(fcn; kwds...)
     typ = k_str[1: udscore - 1]
     if typ in fitarg
       para = Symbol(k_str[udscore + 1:end])
-      foo[typ][arg_dict[para]] = v
+      # println("typ ", typ)
+      # print("\n ")
+      # println("para ", para)
+      # print("\n ")
+      # println("foo[typ][arg_dict] ", foo[typ][1])
+      # print("\n")
+      # println("value ", v)
+      # print("\n ")
+      # println("arg_dict ", arg_dict[para])
+      foo[typ][arg_dict[para]] = isa(v, Vector) ? Tuple(v) : v
     end
   end
   return (new_kwds, foo)
@@ -231,7 +244,8 @@ end
 # Minuit(fcn, m::ArrayFit; kwds...) = Minuit(fcn, args(m); (Symbol(k) => v for (k, v) in m.fitarg)..., kwds...)
 function Minuit(fcn, m::ArrayFit; kwds...)
   # attributes = [:errors, :fixed, :limits]
-  _m = Minuit(fcn; kwds...)
+  ini_value = Tuple(m.values)
+  _m::ArrayFit = Minuit(fcn, ini_value; kwds...)
   _m.errors = m.errors
   _m.fixed = m.fixed
   _m.limits = m.limits
