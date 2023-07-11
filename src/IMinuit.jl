@@ -141,10 +141,10 @@ function preprocess(fcn; kwds...)
   len = length(args)
   stored_kwds = Dict(str => nothing for str in removed)
   new_kwds = Vector()
-  foo = Dict{String, Array{Union{Float64, Bool, Tuple}}}()
-  foo["error"] = Array{Float64}(undef, len)
-  foo["limit"] = fill((-Inf64, Inf64), len)
-  foo["fix"] = falses(len)
+  fitarg_dict = Dict{String, Array{Union{Float64, Bool, Tuple}}}()
+  fitarg_dict["error"] = Array{Float64}(undef, len)
+  fitarg_dict["limit"] = fill((-Inf64, Inf64), len)
+  fitarg_dict["fix"] = falses(len)
   # println(kwds)
   for (k, v) in kwds
     if v === nothing
@@ -155,7 +155,7 @@ function preprocess(fcn; kwds...)
     	stored_kwds[k_str] = v
       continue
     elseif k_str in fitarg
-      foo[k_str] = v
+      fitarg_dict[k_str] = v
       continue
     end
     udscore = findfirst('_', k_str)
@@ -166,77 +166,81 @@ function preprocess(fcn; kwds...)
     typ = k_str[1: udscore - 1]
     if typ in fitarg
       para = Symbol(k_str[udscore + 1:end])
-      # println("typ ", typ)
-      # print("\n ")
-      # println("para ", para)
-      # print("\n ")
-      # println("foo[typ][arg_dict] ", foo[typ][1])
-      # print("\n")
-      # println("value ", v)
-      # print("\n ")
-      # println("arg_dict ", arg_dict[para])
-      foo[typ][arg_dict[para]] = isa(v, Vector) ? Tuple(v) : v
+      fitarg_dict[typ][arg_dict[para]] = isa(v, Vector) ? Tuple(v) : v
     end
   end
-  return (new_kwds, foo)
+  return (new_kwds, fitarg_dict)
 end
+
+function preprocess(fcn, fit::AbstractFit; kwds...)
+  if haskey(kwds, :name)
+  	args = kwds[:name]
+  else
+    args = func_argnames(fcn)
+  end
+  # println(args)
+  arg_dict = Dict(x => i for (i, x) in enumerate(args))
+  stored_kwds = Dict(str => nothing for str in removed)
+  new_kwds = Vector()
+  fitarg_dict = Dict{String, AbstractVector{Union{Float64, Bool, Tuple}}}("error" => [fit.errors...], "limit" => [fit.limits...], "fix" => [fit.fixed...])
+  for (k, v) in kwds
+    if v === nothing
+      continue
+    end
+    k_str = String(k)
+    if k_str in removed
+    	stored_kwds[k_str] = v
+      continue
+    elseif k_str in fitarg
+      fitarg_dict[k_str] = v
+      continue
+    end
+    udscore = findfirst('_', k_str)
+    if udscore === nothing
+      push!(new_kwds, (k, v))
+    	continue
+    end
+    typ = k_str[1: udscore - 1]
+    if typ in fitarg
+      para = Symbol(k_str[udscore + 1:end])
+      fitarg_dict[typ][arg_dict[para]] = isa(v, Vector) ? Tuple(v) : v
+    end
+  end
+  return (new_kwds, fitarg_dict)
+end
+
+
 function Minuit(fcn; kwds...)::Fit
-#   forced_parameters = Tuple(func_argnames(fcn)) # get the argument lists of fcn
-  # return iminuit.Minuit(fcn; forced_parameters=forced_parameters, kwds...)
-  # args = func_argnames(fcn)
-  # len = length(args)
-  # arg_dict = Dict(x => i for (i, x) in enumerate(args))
-  # stored_kwds = Dict(str => nothing for str in removed)
-  # new_kwds = Vector()
-  # foo = Dict{String, Array{Union{Float64, Bool, Tuple{Float64, Float64}}}}()
-  # foo["error"] = Array{Float64}(undef, len)
-  # foo["limit"] = fill((-Inf64, Inf64), len)
-  # foo["fix"] = falses(len)
-  # for (k, v) in kwds
-  #   k_str = String(k)
-  #   if k_str in removed
-  #   	stored_kwds[k_str] = v
-  #     continue
-  #   end
-  #   udscore = findfirst('_', k_str)
-  #   if udscore === nothing
-  #     push!(new_kwds, (k, v))
-  #   	continue
-  #   end
-  #   typ = k_str[1: udscore - 1]
-  #   if typ in fitarg
-  #     para = Symbol(k_str[udscore + 1:end])
-  #     foo[typ][arg_dict[para]] = v
-  #   end
-  # end
-  new_kwds, foo = preprocess(fcn; kwds...)
+  new_kwds, fitarg_dict = preprocess(fcn; kwds...)
   m = iminuit.Minuit(fcn; new_kwds...)
-  m.errors = foo["error"]
-  m.limits = foo["limit"]
-  m.fixed = foo["fix"]
-  # @remo removed_syms
-  # for (kwd, v) in stored_kwds
-  #   if v !== nothing
-  #     :(m.$kwd = v) |> eval
-  #   end
-  # end
+  m.errors = fitarg_dict["error"]
+  m.limits = fitarg_dict["limit"]
+  m.fixed = fitarg_dict["fix"]
   return m
 end
 
 function Minuit(fcn, start::AbstractVector; kwds...)::ArrayFit
-  new_kwds, foo = preprocess(fcn; kwds...)
-  m = iminuit.Minuit(fcn, start; new_kwds...)
-  m.errors = foo["error"]
-  m.limits = foo["limit"]
-  m.fixed = foo["fix"]
+  if isempty(kwds)
+  	m = iminuit.Minuit(fcn, start)
+  else
+    new_kwds, foo = preprocess(fcn; kwds...)
+    m = iminuit.Minuit(fcn, start; new_kwds...)
+    m.errors = foo["error"]
+    m.limits = foo["limit"]
+    m.fixed = foo["fix"]
+  end
   return m
 end
 function Minuit(fcn, start::Tuple; kwds...)::ArrayFit
-  new_kwds, foo = preprocess(fcn; kwds...)
-  m = iminuit.Minuit(fcn, start; new_kwds...)
-  m.errors = foo["error"]
-  m.limits = foo["limit"]
-  m.fixed = foo["fix"]
+  if isempty(kwds)
+  	m = iminuit.Minuit(fcn, start)
+  else
+    new_kwds, foo = preprocess(fcn; kwds...)
+    m = iminuit.Minuit(fcn, start; new_kwds...)
+    m.errors = foo["error"]
+    m.limits = foo["limit"]
+    m.fixed = foo["fix"]
+  end
   return m
 end
 # Minuit(fcn; kwds...)::ArrayFit = iminuit.Minuit(fcn; kwds...)
@@ -244,26 +248,28 @@ end
 # Minuit(fcn, m::ArrayFit; kwds...) = Minuit(fcn, args(m); (Symbol(k) => v for (k, v) in m.fitarg)..., kwds...)
 function Minuit(fcn, m::ArrayFit; kwds...)
   # attributes = [:errors, :fixed, :limits]
+  new_kwds, fitarg_dict = preprocess(fcn, m; kwds...)
   ini_value = Tuple(m.values)
-  _m::ArrayFit = Minuit(fcn, ini_value; kwds...)
-  _m.errors = m.errors
-  _m.fixed = m.fixed
-  _m.limits = m.limits
-  # for attri in attributes
-  # 	:(_m.$attri = __m.$attri) |> eval
-  # end
+  _m::ArrayFit = Minuit(fcn, ini_value; new_kwds...)
+  _m.limits = fitarg_dict["limit"]
+  _m.errors = fitarg_dict["error"]
+  _m.fixed = fitarg_dict["fix"]
   return _m
 end
 # Minuit(fcn, m::Fit; kwds...) = Minuit(fcn; (Symbol(k) => v for (k, v) in m.fitarg)..., kwds...)
 function Minuit(fcn, m::Fit; kwds...)
   # attributes = [:errors, :fixed, :limits]
-  _m = Minuit(fcn; kwds...)
-  _m.errors = m.errors
-  _m.fixed = m.fixed
-  _m.limits = m.limits
-  # for attri in attributes
-  # 	:(_m.$attri = m.$attri) |> eval
-  # end
+  new_kwds, fitarg_dict = preprocess(fcn, m; kwds...)
+  for (k, v) in m.values.to_dict()
+    if haskey(new_kwds, k)
+      continue
+    end
+    push!(new_kwds, (k, v))
+  end
+  _m = Minuit(fcn; new_kwds...)
+  _m.limits = fitarg_dict["limit"]
+  _m.errors = fitarg_dict["error"]
+  _m.fixed = fitarg_dict["fix"]
   return _m
 end
 
@@ -368,8 +374,51 @@ to `migrad`, `minos` etc.
 """
 function model_fit(model::Function, data::Data, start_values; kws...)
   # _model(x, par) = length(func_argnames(model)) > 2 ? model(x, par...) : model(x, par)
+  # println("kwds: ", kws)
   _chisq(par) = chisq(model, data, par)
   _fit = Minuit(_chisq, start_values; kws...)
+  return _fit
+end
+function model_fit(model::Function, data::Data, fit::AbstractFit; kws...)
+  # _model(x, par) = length(func_argnames(model)) > 2 ? model(x, par...) : model(x, par)
+  # println("called abf ver")
+  # args = nothing
+  # if haskey(kws, :name)
+  # 	args = kws[:name]
+  # else
+  #   args = func_argnames(model)
+  # end
+  # # println(args)
+  # arg_dict = Dict(x => i for (i, x) in enumerate(args))
+  # len = length(args)
+  # stored_kwds = Dict(str => nothing for str in removed)
+  # new_kwds = Vector()
+  # fitarg_dict = Dict{String, AbstractVector{Union{Float64, Bool, Tuple}}}("error" => [fit.errors...], "limit" => [fit.limits...], "fix" => [fit.fixed...])
+  # for (k, v) in kws
+  #   if v === nothing
+  #     continue
+  #   end
+  #   k_str = String(k)
+  #   if k_str in removed
+  #   	stored_kwds[k_str] = v
+  #     continue
+  #   elseif k_str in fitarg
+  #     fitarg_dict[k_str] = v
+  #     continue
+  #   end
+  #   udscore = findfirst('_', k_str)
+  #   if udscore === nothing
+  #     push!(new_kwds, (k, v))
+  #   	continue
+  #   end
+  #   typ = k_str[1: udscore - 1]
+  #   if typ in fitarg
+  #     para = Symbol(k_str[udscore + 1:end])
+  #     fitarg_dict[typ][arg_dict[para]] = isa(v, Vector) ? Tuple(v) : v
+  #   end
+  # end
+  _chisq(par) = chisq(model, data, par)
+  _fit = Minuit(_chisq, fit; kws...)
   return _fit
 end
 
