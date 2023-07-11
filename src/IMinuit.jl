@@ -12,6 +12,7 @@ export Minuit, migrad, minos, hesse, iminuit, args, model_fit, @model_fit
 export AbstractFit, Fit, ArrayFit, func_argnames, Data, chisq, @plt_data, @plt_data!, @plt_best, @plt_best!
 export gradient, LazyHelp, contour, mncontour, mnprofile, draw_mncontour, profile,
 draw_contour, draw_profile
+export matrix
 export get_contours, get_contours_all, contour_df, get_contours_given_parameter
 export contour_df_given_parameter, get_contours_samples, contour_df_samples
 export reset
@@ -125,31 +126,130 @@ From `iminuit`:
 errordef=None, grad=None, use_array_call=False, **kwds)`
 
 """
-# function Minuit(fcn; kwds...)::Fit
+fitarg = ["error", "fix", "limit"]
+removed = ["pedantic", "errordef", "throw_nan", "print_level", "use_array_call"]
+removed_syms = [:pedantic, :errordef, :throw_nan, :print_leve, :use_array_call]
+function preprocess(fcn; kwds...)
+  args = nothing
+  if haskey(kwds, :name)
+  	args = kwds[:name]
+  else
+    args = func_argnames(fcn)
+  end
+  # println(args)
+  arg_dict = Dict(x => i for (i, x) in enumerate(args))
+  len = length(args)
+  stored_kwds = Dict(str => nothing for str in removed)
+  new_kwds = Vector()
+  foo = Dict{String, Array{Union{Float64, Bool, Tuple{Float64, Float64}}}}()
+  foo["error"] = Array{Float64}(undef, len)
+  foo["limit"] = fill((-Inf64, Inf64), len)
+  foo["fix"] = falses(len)
+  for (k, v) in kwds
+    k_str = String(k)
+    if k_str in removed
+    	stored_kwds[k_str] = v
+      continue
+    elseif k_str in fitarg
+      foo[k_str] = v
+      continue
+    end
+    udscore = findfirst('_', k_str)
+    if udscore === nothing
+      push!(new_kwds, (k, v))
+    	continue
+    end
+    typ = k_str[1: udscore - 1]
+    if typ in fitarg
+      para = Symbol(k_str[udscore + 1:end])
+      foo[typ][arg_dict[para]] = v
+    end
+  end
+  return (new_kwds, foo)
+end
+function Minuit(fcn; kwds...)::Fit
 #   forced_parameters = Tuple(func_argnames(fcn)) # get the argument lists of fcn
-#   return iminuit.Minuit(fcn; forced_parameters=forced_parameters, kwds...)
-# end
+  # return iminuit.Minuit(fcn; forced_parameters=forced_parameters, kwds...)
+  # args = func_argnames(fcn)
+  # len = length(args)
+  # arg_dict = Dict(x => i for (i, x) in enumerate(args))
+  # stored_kwds = Dict(str => nothing for str in removed)
+  # new_kwds = Vector()
+  # foo = Dict{String, Array{Union{Float64, Bool, Tuple{Float64, Float64}}}}()
+  # foo["error"] = Array{Float64}(undef, len)
+  # foo["limit"] = fill((-Inf64, Inf64), len)
+  # foo["fix"] = falses(len)
+  # for (k, v) in kwds
+  #   k_str = String(k)
+  #   if k_str in removed
+  #   	stored_kwds[k_str] = v
+  #     continue
+  #   end
+  #   udscore = findfirst('_', k_str)
+  #   if udscore === nothing
+  #     push!(new_kwds, (k, v))
+  #   	continue
+  #   end
+  #   typ = k_str[1: udscore - 1]
+  #   if typ in fitarg
+  #     para = Symbol(k_str[udscore + 1:end])
+  #     foo[typ][arg_dict[para]] = v
+  #   end
+  # end
+  new_kwds, foo = preprocess(fcn; kwds...)
+  m = iminuit.Minuit(fcn; new_kwds...)
+  m.errors = foo["error"]
+  m.limits = foo["limit"]
+  m.fixed = foo["fix"]
+  # @remo removed_syms
+  # for (kwd, v) in stored_kwds
+  #   if v !== nothing
+  #     :(m.$kwd = v) |> eval
+  #   end
+  # end
+  return m
+end
 
-Minuit(fcn, start::AbstractVector; kwds...)::ArrayFit = iminuit.Minuit(fcn, start; kwds...)
-Minuit(fcn, start::Tuple; kwds...)::ArrayFit = iminuit.Minuit(fcn, start; kwds...)
-Minuit(fcn; kwds...)::ArrayFit = iminuit.Minuit(fcn; kwds...)
+function Minuit(fcn, start::AbstractVector; kwds...)::ArrayFit
+  new_kwds, foo = preprocess(fcn; kwds...)
+  m = iminuit.Minuit(fcn, start; new_kwds...)
+  m.errors = foo["error"]
+  m.limits = foo["limit"]
+  m.fixed = foo["fix"]
+  return m
+end
+function Minuit(fcn, start::Tuple; kwds...)::ArrayFit
+  new_kwds, foo = preprocess(fcn; kwds...)
+  m = iminuit.Minuit(fcn, start; new_kwds...)
+  m.errors = foo["error"]
+  m.limits = foo["limit"]
+  m.fixed = foo["fix"]
+  return m
+end
+# Minuit(fcn; kwds...)::ArrayFit = iminuit.Minuit(fcn; kwds...)
 
 # Minuit(fcn, m::ArrayFit; kwds...) = Minuit(fcn, args(m); (Symbol(k) => v for (k, v) in m.fitarg)..., kwds...)
 function Minuit(fcn, m::ArrayFit; kwds...)
-  attributes = [:errors, :fixed, :limits]
+  # attributes = [:errors, :fixed, :limits]
   _m = Minuit(fcn; kwds...)
-  for attri in attributes
-  	:(_m.$attri = m.$attri) |> eval
-  end
+  _m.errors = m.errors
+  _m.fixed = m.fixed
+  _m.limits = m.limits
+  # for attri in attributes
+  # 	:(_m.$attri = __m.$attri) |> eval
+  # end
   return _m
 end
 # Minuit(fcn, m::Fit; kwds...) = Minuit(fcn; (Symbol(k) => v for (k, v) in m.fitarg)..., kwds...)
 function Minuit(fcn, m::Fit; kwds...)
-  attributes = [:errors, :fixed, :limits]
-	_m = Minuit(fcn; kwds...)
-  for attri in attributes
-  	:(_m.$attri = m.$attri) |> eval
-  end
+  # attributes = [:errors, :fixed, :limits]
+  _m = Minuit(fcn; kwds...)
+  _m.errors = m.errors
+  _m.fixed = m.fixed
+  _m.limits = m.limits
+  # for attri in attributes
+  # 	:(_m.$attri = m.$attri) |> eval
+  # end
   return _m
 end
 
@@ -174,20 +274,23 @@ end
 
 hesse(f::AbstractFit; maxcall=0) = pycall(f.hesse, PyObject, maxcall)
 
+function minos(f::AbstractFit)
+  return pycall(f.minos, PyObject)
+end
 
 # new usage, now minos() can take confidence level as parameter, which should be less than 1
-function minos(f::AbstractFit; parameter::Tuple, cl=nothing, maxcall=0)
-  return pycall(f.minos, PyObject, parameter, cl, maxcall)
-end
+# function minos(f::AbstractFit, parameter = nothing, cl=nothing, maxcall=0)
+#   return pycall(f.minos, PyObject, parameter, cl, maxcall)
+# end
 
 # legacy usage, pass the number of sigma into the function, which is exactly the same as the new usage, cause when parameter cl is larger than 1 it is interpreted as the number of sigma
 # while the scenario when the number is less than 1 is not implemented, hope u guys do not need it LOL.
-function minos(f::AbstractFit; var=nothing, sigma=1, maxcall=0)
+function minos(f::AbstractFit, var = nothing, sigma = 1, maxcall = 0)
   if sigma >= 1
     if var === nothing
-      return pycall(f.minos, PyObject, (), sigma, maxcall)
+      return pycall(f.minos, PyObject, cl = sigma, ncall = maxcall)
     else
-      return pycall(f.minos, PyObject, (var,), sigma, maxcall)
+      return pycall(f.minos, PyObject, (var), sigma, maxcall)
     end
   else
     error("Sigma less than 1, not supported yet!")
@@ -195,18 +298,6 @@ function minos(f::AbstractFit; var=nothing, sigma=1, maxcall=0)
 end
 
 # matrix(f::AbstractFit; kws...) = pycall(PyObject(f).matrix, PyObject, kws...)
-function matrix(f::AbstractFit; correlation = false, skip_fixed = true)
-	if skip_fixed == true
-    if correlation == false # !! unresolved !!
-      return PyObject(f).\"covariance"
-    else
-      error("still don't know how to implement the error matrix!")
-    end
-  else
-    error("the case that skip_fixed is false hasn't been implemented yet!")
-  end
-end
-
 function args(o::AbstractFit)::Vector{Float64}
   _a::PyObject = o.values
   _n::Int = length(_a)
@@ -222,7 +313,7 @@ for fun in [:contour, :mncontour, :draw_contour, :draw_mncontour]
 end
 #fix for incorrect parameters
 for fun in [:mncontour, :draw_mncontour]
-  :(($fun)(f::AbstractFit, par1, par2; numpoints = 100, sigma = 1, kws...) = f.$fun(par1, par2; cl = sigma, size = numpoints, kws...)) |> eval
+  :(($fun)(f::AbstractFit, par1, par2; numpoints = 100, sigma = 1, kws...) = begin println("usage of numpoints or sigma is deprecated, please use the arguments size and cl, for more info, go check the iminuit python document"); f.$fun(par1, par2; cl = sigma, size = numpoints, kws...) end) |> eval
 end
 
 for fun in [:profile, :draw_profile, :mnprofile, :draw_mnprofile]
@@ -230,7 +321,7 @@ for fun in [:profile, :draw_profile, :mnprofile, :draw_mnprofile]
 end
 #fix for incorrect parameters
 for fun in [:profile, :draw_profile, :mnprofile, :draw_mnprofile]
-  :(($fun)(f::AbstractFit, par1; numpoints = 100, sigma = 1, kws...) = f.$fun(par1; cl = sigma, size = numpoints, kws...)) |> eval
+  :(($fun)(f::AbstractFit, par1; numpoints = 100, sigma = 1, kws...) = begin println("usage of numpoints or sigma is deprecated, please use the arguments size and cl, for more info, go check the iminuit python document"); f.$fun(par1; cl = sigma, size = numpoints, kws...) end) |> eval
 end
 
 
@@ -279,6 +370,21 @@ macro model_fit(model, data, start_values, kws...)
     _fit = isempty($kws) ? Minuit(_chisq, $start_values) : Minuit(_chisq, $start_values; $(kws...))
   end
   esc(_expr)
+end
+
+function matrix(f::AbstractFit; correlation = true, skip_fixed = true)
+  if !f.valid
+  	f.migrad()
+  end
+	if skip_fixed == true
+    if correlation == true 
+      return PyObject(f)."covariance".correlation()
+    else
+      error("still don't know how to implement the error matrix!")
+    end
+  else
+    error("the case that skip_fixed is false hasn't been implemented yet!")
+  end
 end
 
 

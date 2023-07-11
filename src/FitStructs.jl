@@ -19,6 +19,10 @@ mutable struct ArrayFit <: AbstractFit
     o::PyObject
 end
 
+mutable struct LegacyFit <: AbstractFit
+    o::PyObject
+end
+
 # modified from `Figure` in PyPlot
 PyObject(f::T) where {T<:AbstractFit} = getfield(f, :o)
 convert(::Type{T}, o::PyObject) where {T<:AbstractFit} = T(o)
@@ -42,9 +46,9 @@ haskey(f::AbstractFit, x) = haskey(PyObject(f), x)
 # also don't understand 
 function Base.getproperty(f::AbstractFit, s::Symbol)
     # use PyObject(f) instead of f to prevent StackOverflowError
-    s === :matrix ? matrix(f; correlation = true) : getproperty(PyObject(f), s)
+    s === :matrix ? matrix(f) : getproperty(PyObject(f), s)
 end
 function Base.getproperty(f::AbstractFit, s::AbstractString)
-    s === "matrix" ? matrix(f; correlation = true) : getproperty(PyObject(f), s)
+    s === "matrix" ? matrix(f) : getproperty(PyObject(f), s)
 end
 
