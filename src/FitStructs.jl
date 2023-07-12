@@ -19,10 +19,6 @@ mutable struct ArrayFit <: AbstractFit
     o::PyObject
 end
 
-mutable struct LegacyFit <: AbstractFit
-    o::PyObject
-end
-
 # modified from `Figure` in PyPlot
 PyObject(f::T) where {T<:AbstractFit} = getfield(f, :o)
 convert(::Type{T}, o::PyObject) where {T<:AbstractFit} = T(o)
@@ -51,3 +47,5 @@ function Base.getproperty(f::AbstractFit, s::AbstractString)
     s === "matrix" ? matrix(f) : getproperty(PyObject(f), s)
 end
 
+const pycopy = PyNULL()
+Base.copy(fit::T) where {T <: AbstractFit} = T(pycopy.copy(PyObject(fit)))

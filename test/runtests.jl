@@ -1,3 +1,5 @@
+using Pkg
+Pkg.develop(path = "/home/akizuki/IMinuit.jl")
 using IMinuit
 using Test
 # using DataFrames, CSV
@@ -6,12 +8,11 @@ using Test
     # Write your tests here.
 # end
 
+    f1(x, y, z) = x^2 + (y-1)^2 + (z-2)^4
+    m1 = Minuit(f1, x = 1, y = 1, z = 0)
 @testset "minimizing simple functions: " begin
     f(x) = x[1]^2 + (x[2]-1)^2 + (x[3]-2)^4
-    f1(x, y, z) = x^2 + (y-1)^2 + (z-2)^4
-
     m = Minuit(f, [1,1,0])
-    m1 = Minuit(f1, x = 1, y = 1, z = 0)
 
     migrad(m)
     migrad(m1)

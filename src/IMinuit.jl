@@ -128,17 +128,15 @@ errordef=None, grad=None, use_array_call=False, **kwds)`
 """
 
 # in order to be compatible with legacy usage, it's tons of work :(
-fitarg = ["error", "fix", "limit"]
-removed = ["errordef", "throw_nan", "print_level", "use_array_call"]
-removed_syms = [:errordef, :throw_nan, :print_leve, :use_array_call]
 function preprocess(fcn; kwds...)
-    args = nothing
+    fitarg = ["error", "fix", "limit"]
+    removed = ["errordef", "throw_nan", "print_level", "use_array_call"]
     if haskey(kwds, :name)
         args = kwds[:name]
     else
         args = func_argnames(fcn)
     end
-    # println(args)
+    # println("args ",args, "args")
     arg_dict = Dict(x => i for (i, x) in enumerate(args))
     len = length(args)
     stored_kwds = Dict{String,Any}()
@@ -147,7 +145,7 @@ function preprocess(fcn; kwds...)
     fitarg_dict["error"] = Array{Float64}(undef, len)
     fitarg_dict["limit"] = fill((-Inf64, Inf64), len)
     fitarg_dict["fix"] = falses(len)
-    # println(kwds)
+    # println("kwds ",kwds, "kwds")
     for (k, v) in kwds
         if v === nothing || k == :pedantic
             continue
@@ -175,6 +173,8 @@ function preprocess(fcn; kwds...)
 end
 
 function preprocess(fcn, fit::AbstractFit; kwds...)
+    fitarg = ["error", "fix", "limit"]
+    removed = ["errordef", "throw_nan", "print_level", "use_array_call"]
     if haskey(kwds, :name)
         args = kwds[:name]
     else
@@ -218,7 +218,10 @@ end
 
 
 function Minuit(fcn; kwds...)::Fit
+    removed = ["errordef", "throw_nan", "print_level", "use_array_call"]
+    # println("1 ", kwds, "1")
     new_kwds, stored_kwds, fitarg_dict = preprocess(fcn; kwds...)
+    println(kwds)
     m = iminuit.Minuit(fcn; new_kwds...)
 
     m.errors = fitarg_dict["error"]
@@ -234,6 +237,7 @@ function Minuit(fcn; kwds...)::Fit
 end
 
 function Minuit(fcn, start::AbstractVector; kwds...)::ArrayFit
+    removed = ["errordef", "throw_nan", "print_level", "use_array_call"]
     if isempty(kwds)
         m = iminuit.Minuit(fcn, start)
     else
@@ -254,6 +258,7 @@ function Minuit(fcn, start::AbstractVector; kwds...)::ArrayFit
 end
 
 function Minuit(fcn, start::Tuple; kwds...)::ArrayFit
+    removed = ["errordef", "throw_nan", "print_level", "use_array_call"]
     if isempty(kwds)
         m = iminuit.Minuit(fcn, start)
     else
@@ -274,6 +279,7 @@ function Minuit(fcn, start::Tuple; kwds...)::ArrayFit
 end
 
 function Minuit(fcn, m::AbstractFit; kwds...)
+    removed = ["errordef", "throw_nan", "print_level", "use_array_call"]
     new_kwds, stored_kwds, ini_value, fitarg_dict = preprocess(fcn, m; kwds...)
     _m::ArrayFit = Minuit(fcn, ini_value; new_kwds...)
 
@@ -296,13 +302,13 @@ set_precision(f::AbstractFit, new_precision) = set!(PyObject(f), precision, new_
 # nsplit = 1, nsplit option removed since iminuit v1.5.0
 # resume was removed, use reset() instead
 # precision was also removed, use set_precision() instead
-function migrad(f::AbstractFit; ncall=1000, resume=true, precision=nothing)
+function migrad(f::AbstractFit; ncall=nothing, resume=true, precision=nothing)
     if !resume
-        @warn("legacy usage, please use the reset function!")
+        #@warn("legacy usage, please use the reset function!")
         reset(f)
     end
     if precision !== nothing
-        @warn("legacy usage, now you can directly assign value to Minuit.precision")
+        #@warn("legacy usage, now you can directly assign value to Minuit.precision")
         f.precision = precision
     end
     return pycall(f.migrad, PyObject, ncall)
@@ -313,7 +319,7 @@ end
 hesse(f::AbstractFit; maxcall=0) = pycall(f.hesse, PyObject, maxcall)
 
 function minos(f::AbstractFit)
-    return pycall(f.minos, PyObject)
+    f.minos()
 end
 
 # new usage, now minos() can take confidence level as parameter, which should be less than 1
@@ -325,7 +331,7 @@ end
 # while the scenario when the number is less than 1 is not implemented, hope u guys do not need it LOL.
 function minos(f::AbstractFit, var=nothing, sigma=1, maxcall=0)
     if sigma >= 1
-        @warn("please, go check the doc and learn the new usage, I will not keep maintaining the legacy usage")
+        #@warn("please, go check the doc and learn the new usage, I will not keep maintaining the legacy usage")
         if var === nothing
             return pycall(f.minos, PyObject, cl=sigma, ncall=maxcall)
         else
@@ -353,7 +359,7 @@ end
 #fix for incorrect parameters
 for fun in [:mncontour, :draw_mncontour]
     :(($fun)(f::AbstractFit, par1, par2; numpoints=100, sigma=1, kws...) = begin
-        println("usage of numpoints or sigma is deprecated, please use the arguments size and cl, for more info, go check the iminuit python document")
+        # println("usage of numpoints or sigma is deprecated, please use the arguments size and cl, for more info, go check the iminuit python document")
         f.$fun(par1, par2; cl=sigma, size=numpoints, kws...)
     end) |> eval
 end
@@ -364,14 +370,14 @@ end
 #fix for incorrect parameters
 for fun in [:mnprofile, :draw_mnprofile]
     :(($fun)(f::AbstractFit, par1; numpoints=100, sigma=1, kws...) = begin
-        println("usage of numpoints or sigma is deprecated, please use the arguments size and cl, for more info, go check the iminuit python document")
+        # println("usage of numpoints or sigma is deprecated, please use the arguments size and cl, for more info, go check the iminuit python document")
         f.$fun(par1; cl=sigma, size=numpoints, kws...)
     end) |> eval
 end
 
 for fun in [:profile, :profile]
     :(($fun)(f::AbstractFit, par; bin = 100, kws...) = begin
-        println("usage of bin is deprecated, please use the arguments size, for more info, go check the iminuit python document")
+        # println("usage of bin is deprecated, please use the arguments size, for more info, go check the iminuit python document")
         f.$fun(par1; size = bin, kws...)
     end) |> eval
 end
@@ -430,7 +436,7 @@ macro model_fit(model, data, start_values, kws...)
 end
 
 function matrix(f::AbstractFit; correlation=true, skip_fixed=true)
-    @warn("the correlation matrix is replaced by Minuit.covariance.correlation() in the latest version of iminuit, go check it out")
+    #@warn("the correlation matrix is replaced by Minuit.covariance.correlation() in the latest version of iminuit, go check it out")
     if !f.valid
         f.migrad()
     end

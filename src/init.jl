@@ -19,6 +19,7 @@ function __init__()
     # end
     # println("iminuit version " * _version * " has been imported as `iminuit`." )
     copy!(mMinuit, pyimport_conda("iminuit", iminuit_version, "conda-forge").:Minuit)
+    copy!(pycopy, pyimport("copy"))
     # The following converts the ArgsView type to Vector{Float64}, but takes too much time
     # it takes more than 50 μs
     # pytype_mapping(minuit._libiminuit.ArgsView, Vector{Float64})
