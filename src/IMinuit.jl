@@ -11,7 +11,7 @@ using ForwardDiff: gradient
 export Minuit, migrad, minos, hesse, iminuit, args, model_fit, @model_fit
 export AbstractFit, Fit, ArrayFit, func_argnames, Data, chisq, @plt_data, @plt_data!, @plt_best, @plt_best!
 export gradient, LazyHelp, contour, mncontour, mnprofile, draw_mncontour, profile,
-draw_contour, draw_profile
+    draw_contour, draw_profile
 export matrix
 export get_contours, get_contours_all, contour_df, get_contours_given_parameter
 export contour_df_given_parameter, get_contours_samples, contour_df_samples
@@ -22,12 +22,12 @@ export reset
 # This saves us time when loading iminuit, since we don't have
 # to load up all of the documentation strings right away.
 struct LazyHelp
-  o # a PyObject or similar object supporting getindex with a __doc__ property
-  keys::Tuple{Vararg{String}}
-  LazyHelp(o) = new(o, ())
-  LazyHelp(o, k::AbstractString) = new(o, (k,))
-  LazyHelp(o, k1::AbstractString, k2::AbstractString) = new(o, (k1, k2))
-  LazyHelp(o, k::Tuple{Vararg{AbstractString}}) = new(o, k)
+    o # a PyObject or similar object supporting getindex with a __doc__ property
+    keys::Tuple{Vararg{String}}
+    LazyHelp(o) = new(o, ())
+    LazyHelp(o, k::AbstractString) = new(o, (k,))
+    LazyHelp(o, k1::AbstractString, k2::AbstractString) = new(o, (k1, k2))
+    LazyHelp(o, k::Tuple{Vararg{AbstractString}}) = new(o, k)
 end
 # function show(io::IO, ::MIME"text/plain", h::LazyHelp)
 # 	o = h.o
@@ -40,25 +40,25 @@ end
 #   end
 # end
 function show(io::IO, ::MIME"text/plain", h::LazyHelp)
-  o = h.o
-  for k in h.keys
-    o = getproperty(o, k)
-  end
-  if hasproperty(o, "__doc__")
-    print(io, "Docstring pulled from the Python `iminuit`:\n\n")
-    print(io, convert(AbstractString, o.\"__doc__"))
-  else
-    print(io, "no Python docstring found for ", h.keys)
-  end
+    o = h.o
+    for k in h.keys
+        o = getproperty(o, k)
+    end
+    if hasproperty(o, "__doc__")
+        print(io, "Docstring pulled from the Python `iminuit`:\n\n")
+        print(io, convert(AbstractString, o .\ "__doc__"))
+    else
+        print(io, "no Python docstring found for ", h.keys)
+    end
 end
 
 Base.show(io::IO, h::LazyHelp) = show(io, "text/plain", h)
 function Base.Docs.catdoc(hs::LazyHelp...)
-  Base.Docs.Text() do io
-    for h in hs
-      show(io, MIME"text/plain"(), h)
+    Base.Docs.Text() do io
+        for h in hs
+            show(io, MIME"text/plain"(), h)
+        end
     end
-  end
 end
 
 
@@ -70,9 +70,9 @@ Modified from [`methodshow.jl`](https://github.com/JuliaLang/julia/blob/master/b
 (`Vector{Any}` changed to `Vector{Symbol}`).
 """
 function method_argnames(m::Method)
-  argnames = ccall(:jl_uncompress_argnames, Vector{Symbol}, (Any,), m.slot_syms)
-  isempty(argnames) && return argnames
-  return argnames[1:m.nargs]
+    argnames = ccall(:jl_uncompress_argnames, Vector{Symbol}, (Any,), m.slot_syms)
+    isempty(argnames) && return argnames
+    return argnames[1:m.nargs]
 end
 
 """
@@ -81,8 +81,8 @@ func_argnames(f::Function)
 Extracting the argument names of a function as an array.
 """
 function func_argnames(f::Function)
-  ms = collect(methods(f))
-  return method_argnames(last(ms))[2:end]
+    ms = collect(methods(f))
+    return method_argnames(last(ms))[2:end]
 end
 
 
@@ -126,151 +126,167 @@ From `iminuit`:
 errordef=None, grad=None, use_array_call=False, **kwds)`
 
 """
+
+# in order to be compatible with legacy usage, it's tons of work :(
 fitarg = ["error", "fix", "limit"]
-removed = ["pedantic", "errordef", "throw_nan", "print_level", "use_array_call"]
-removed_syms = [:pedantic, :errordef, :throw_nan, :print_leve, :use_array_call]
+removed = ["errordef", "throw_nan", "print_level", "use_array_call"]
+removed_syms = [:errordef, :throw_nan, :print_leve, :use_array_call]
 function preprocess(fcn; kwds...)
-  args = nothing
-  if haskey(kwds, :name)
-  	args = kwds[:name]
-  else
-    args = func_argnames(fcn)
-  end
-  # println(args)
-  arg_dict = Dict(x => i for (i, x) in enumerate(args))
-  len = length(args)
-  stored_kwds = Dict(str => nothing for str in removed)
-  new_kwds = Vector()
-  fitarg_dict = Dict{String, Array{Union{Float64, Bool, Tuple}}}()
-  fitarg_dict["error"] = Array{Float64}(undef, len)
-  fitarg_dict["limit"] = fill((-Inf64, Inf64), len)
-  fitarg_dict["fix"] = falses(len)
-  # println(kwds)
-  for (k, v) in kwds
-    if v === nothing
-      continue
+    args = nothing
+    if haskey(kwds, :name)
+        args = kwds[:name]
+    else
+        args = func_argnames(fcn)
     end
-    k_str = String(k)
-    if k_str in removed
-    	stored_kwds[k_str] = v
-      continue
-    elseif k_str in fitarg
-      fitarg_dict[k_str] = v
-      continue
+    # println(args)
+    arg_dict = Dict(x => i for (i, x) in enumerate(args))
+    len = length(args)
+    stored_kwds = Dict{String,Any}()
+    new_kwds = Vector()
+    fitarg_dict = Dict{String,Array{Union{Float64,Bool,Tuple}}}()
+    fitarg_dict["error"] = Array{Float64}(undef, len)
+    fitarg_dict["limit"] = fill((-Inf64, Inf64), len)
+    fitarg_dict["fix"] = falses(len)
+    # println(kwds)
+    for (k, v) in kwds
+        if v === nothing || k == :pedantic
+            continue
+        end
+        k_str = String(k)
+        if k_str in removed
+            stored_kwds[k_str] = v
+            continue
+        elseif k_str in fitarg
+            fitarg_dict[k_str] = v
+            continue
+        end
+        udscore = findfirst('_', k_str)
+        if udscore === nothing
+            push!(new_kwds, (k, v))
+            continue
+        end
+        typ = k_str[1:udscore-1]
+        if typ in fitarg
+            para = Symbol(k_str[udscore+1:end])
+            fitarg_dict[typ][arg_dict[para]] = isa(v, Vector) ? Tuple(v) : v
+        end
     end
-    udscore = findfirst('_', k_str)
-    if udscore === nothing
-      push!(new_kwds, (k, v))
-    	continue
-    end
-    typ = k_str[1: udscore - 1]
-    if typ in fitarg
-      para = Symbol(k_str[udscore + 1:end])
-      fitarg_dict[typ][arg_dict[para]] = isa(v, Vector) ? Tuple(v) : v
-    end
-  end
-  return (new_kwds, fitarg_dict)
+    return (new_kwds, stored_kwds, fitarg_dict)
 end
 
 function preprocess(fcn, fit::AbstractFit; kwds...)
-  if haskey(kwds, :name)
-  	args = kwds[:name]
-  else
-    args = func_argnames(fcn)
-  end
-  # println(args)
-  arg_dict = Dict(x => i for (i, x) in enumerate(args))
-  stored_kwds = Dict(str => nothing for str in removed)
-  new_kwds = Vector()
-  fitarg_dict = Dict{String, AbstractVector{Union{Float64, Bool, Tuple}}}("error" => [fit.errors...], "limit" => [fit.limits...], "fix" => [fit.fixed...])
-  for (k, v) in kwds
-    if v === nothing
-      continue
+    if haskey(kwds, :name)
+        args = kwds[:name]
+    else
+        args = Symbol.(fit.parameters)
     end
-    k_str = String(k)
-    if k_str in removed
-    	stored_kwds[k_str] = v
-      continue
-    elseif k_str in fitarg
-      fitarg_dict[k_str] = v
-      continue
+    arg_dict = Dict(x => i for (i, x) in enumerate(args))
+    stored_kwds = Dict{String,Any}()
+    ini_value = Dict{Symbol, Float64}(args[i] => fit.values[i] for i in eachindex(args))
+    new_kwds = Vector()
+    fitarg_dict = Dict{String,AbstractVector{Union{Float64,Bool,Tuple}}}("error" => [fit.errors...], "limit" => [fit.limits...], "fix" => [fit.fixed...])
+    for (k, v) in kwds
+        if v === nothing || k == :pedantic
+            continue
+        end
+        k_str = String(k)
+        if k_str in removed
+            stored_kwds[k_str] = v
+            continue
+        elseif k_str in fitarg
+            fitarg_dict[k_str] = v
+            continue
+        elseif k in args
+            ini_value[k] = v
+        end
+        udscore = findfirst('_', k_str)
+        if udscore === nothing
+            push!(new_kwds, (k, v))
+            continue
+        end
+        typ = k_str[1:udscore-1]
+        if typ in fitarg
+            para = Symbol(k_str[udscore+1:end])
+            fitarg_dict[typ][arg_dict[para]] = isa(v, Vector) ? Tuple(v) : v
+        end
     end
-    udscore = findfirst('_', k_str)
-    if udscore === nothing
-      push!(new_kwds, (k, v))
-    	continue
+    if isa(fit, ArrayFit)
+        ini_value = [ini_value[k] for k in args]
     end
-    typ = k_str[1: udscore - 1]
-    if typ in fitarg
-      para = Symbol(k_str[udscore + 1:end])
-      fitarg_dict[typ][arg_dict[para]] = isa(v, Vector) ? Tuple(v) : v
-    end
-  end
-  return (new_kwds, fitarg_dict)
+    return (new_kwds, stored_kwds, ini_value, fitarg_dict)
 end
 
 
 function Minuit(fcn; kwds...)::Fit
-  new_kwds, fitarg_dict = preprocess(fcn; kwds...)
-  m = iminuit.Minuit(fcn; new_kwds...)
-  m.errors = fitarg_dict["error"]
-  m.limits = fitarg_dict["limit"]
-  m.fixed = fitarg_dict["fix"]
-  return m
+    new_kwds, stored_kwds, fitarg_dict = preprocess(fcn; kwds...)
+    m = iminuit.Minuit(fcn; new_kwds...)
+
+    m.errors = fitarg_dict["error"]
+    m.limits = fitarg_dict["limit"]
+    m.fixed = fitarg_dict["fix"]
+
+    for sym in removed
+        if haskey(stored_kwds, sym)
+            m[Symbol(sym)] = stored_kwds[sym]
+        end
+    end
+    return m
 end
 
 function Minuit(fcn, start::AbstractVector; kwds...)::ArrayFit
-  if isempty(kwds)
-  	m = iminuit.Minuit(fcn, start)
-  else
-    new_kwds, foo = preprocess(fcn; kwds...)
-    m = iminuit.Minuit(fcn, start; new_kwds...)
-    m.errors = foo["error"]
-    m.limits = foo["limit"]
-    m.fixed = foo["fix"]
-  end
-  return m
-end
-function Minuit(fcn, start::Tuple; kwds...)::ArrayFit
-  if isempty(kwds)
-  	m = iminuit.Minuit(fcn, start)
-  else
-    new_kwds, foo = preprocess(fcn; kwds...)
-    m = iminuit.Minuit(fcn, start; new_kwds...)
-    m.errors = foo["error"]
-    m.limits = foo["limit"]
-    m.fixed = foo["fix"]
-  end
-  return m
-end
-# Minuit(fcn; kwds...)::ArrayFit = iminuit.Minuit(fcn; kwds...)
+    if isempty(kwds)
+        m = iminuit.Minuit(fcn, start)
+    else
+        new_kwds, stored_kwds, foo = preprocess(fcn; kwds...)
+        m = iminuit.Minuit(fcn, start; new_kwds...)
 
-# Minuit(fcn, m::ArrayFit; kwds...) = Minuit(fcn, args(m); (Symbol(k) => v for (k, v) in m.fitarg)..., kwds...)
-function Minuit(fcn, m::ArrayFit; kwds...)
-  # attributes = [:errors, :fixed, :limits]
-  new_kwds, fitarg_dict = preprocess(fcn, m; kwds...)
-  ini_value = Tuple(m.values)
-  _m::ArrayFit = Minuit(fcn, ini_value; new_kwds...)
-  _m.limits = fitarg_dict["limit"]
-  _m.errors = fitarg_dict["error"]
-  _m.fixed = fitarg_dict["fix"]
-  return _m
-end
-# Minuit(fcn, m::Fit; kwds...) = Minuit(fcn; (Symbol(k) => v for (k, v) in m.fitarg)..., kwds...)
-function Minuit(fcn, m::Fit; kwds...)
-  # attributes = [:errors, :fixed, :limits]
-  new_kwds, fitarg_dict = preprocess(fcn, m; kwds...)
-  for (k, v) in m.values.to_dict()
-    if haskey(new_kwds, k)
-      continue
+        m.errors = foo["error"]
+        m.limits = foo["limit"]
+        m.fixed = foo["fix"]
+
+        for sym in removed
+            if haskey(stored_kwds, sym)
+                m[Symbol(sym)] = stored_kwds[sym]
+            end
+        end
     end
-    push!(new_kwds, (k, v))
-  end
-  _m = Minuit(fcn; new_kwds...)
-  _m.limits = fitarg_dict["limit"]
-  _m.errors = fitarg_dict["error"]
-  _m.fixed = fitarg_dict["fix"]
-  return _m
+    return m
+end
+
+function Minuit(fcn, start::Tuple; kwds...)::ArrayFit
+    if isempty(kwds)
+        m = iminuit.Minuit(fcn, start)
+    else
+        new_kwds, stored_kwds, foo = preprocess(fcn; kwds...)
+        m = iminuit.Minuit(fcn, start; new_kwds...)
+
+        m.errors = foo["error"]
+        m.limits = foo["limit"]
+        m.fixed = foo["fix"]
+
+        for sym in removed
+            if haskey(stored_kwds, sym)
+                m[Symbol(sym)] = stored_kwds[sym]
+            end
+        end
+    end
+    return m
+end
+
+function Minuit(fcn, m::AbstractFit; kwds...)
+    new_kwds, stored_kwds, ini_value, fitarg_dict = preprocess(fcn, m; kwds...)
+    _m::ArrayFit = Minuit(fcn, ini_value; new_kwds...)
+
+    _m.limits = fitarg_dict["limit"]
+    _m.errors = fitarg_dict["error"]
+    _m.fixed = fitarg_dict["fix"]
+
+    for sym in removed
+        if haskey(stored_kwds, sym)
+            m[Symbol(sym)] = stored_kwds[sym]
+        end
+    end
+    return _m
 end
 
 reset(f::AbstractFit) = pycall(f.reset, PyObject)
@@ -281,13 +297,15 @@ set_precision(f::AbstractFit, new_precision) = set!(PyObject(f), precision, new_
 # resume was removed, use reset() instead
 # precision was also removed, use set_precision() instead
 function migrad(f::AbstractFit; ncall=1000, resume=true, precision=nothing)
-  if !resume
-    reset(f)
-  end
-  if precision !== nothing
-    set_precision(precision)
-  end
-  return pycall(f.migrad, PyObject, ncall)
+    if !resume
+        @warn("legacy usage, please use the reset function!")
+        reset(f)
+    end
+    if precision !== nothing
+        @warn("legacy usage, now you can directly assign value to Minuit.precision")
+        f.precision = precision
+    end
+    return pycall(f.migrad, PyObject, ncall)
 end
 
 
@@ -295,7 +313,7 @@ end
 hesse(f::AbstractFit; maxcall=0) = pycall(f.hesse, PyObject, maxcall)
 
 function minos(f::AbstractFit)
-  return pycall(f.minos, PyObject)
+    return pycall(f.minos, PyObject)
 end
 
 # new usage, now minos() can take confidence level as parameter, which should be less than 1
@@ -305,55 +323,69 @@ end
 
 # legacy usage, pass the number of sigma into the function, which is exactly the same as the new usage, cause when parameter cl is larger than 1 it is interpreted as the number of sigma
 # while the scenario when the number is less than 1 is not implemented, hope u guys do not need it LOL.
-function minos(f::AbstractFit, var = nothing, sigma = 1, maxcall = 0)
-  if sigma >= 1
-    if var === nothing
-      return pycall(f.minos, PyObject, cl = sigma, ncall = maxcall)
+function minos(f::AbstractFit, var=nothing, sigma=1, maxcall=0)
+    if sigma >= 1
+        @warn("please, go check the doc and learn the new usage, I will not keep maintaining the legacy usage")
+        if var === nothing
+            return pycall(f.minos, PyObject, cl=sigma, ncall=maxcall)
+        else
+            return pycall(f.minos, PyObject, (var), sigma, maxcall)
+        end
     else
-      return pycall(f.minos, PyObject, (var), sigma, maxcall)
+        error("Sigma less than 1, not supported yet!")
     end
-  else
-    error("Sigma less than 1, not supported yet!")
-  end
 end
 
 # matrix(f::AbstractFit; kws...) = pycall(PyObject(f).matrix, PyObject, kws...)
 function args(o::AbstractFit)::Vector{Float64}
-  _a::PyObject = o.values
-  _n::Int = length(_a)
-  _res = zeros(_n)
-  @views for i = 1:_n
-    _res[i] = get(_a, i - 1)
-  end
-  return _res
+    _a::PyObject = o.values
+    _n::Int = length(_a)
+    _res = zeros(_n)
+    @views for i = 1:_n
+        _res[i] = get(_a, i - 1)
+    end
+    return _res
 end
 
 for fun in [:contour, :mncontour, :draw_contour, :draw_mncontour]
-  :(($fun)(f::AbstractFit, par1, par2; kws...) = f.$fun(par1, par2; kws...)) |> eval
+    :(($fun)(f::AbstractFit, par1, par2; kws...) = f.$fun(par1, par2; kws...)) |> eval
 end
 #fix for incorrect parameters
 for fun in [:mncontour, :draw_mncontour]
-  :(($fun)(f::AbstractFit, par1, par2; numpoints = 100, sigma = 1, kws...) = begin println("usage of numpoints or sigma is deprecated, please use the arguments size and cl, for more info, go check the iminuit python document"); f.$fun(par1, par2; cl = sigma, size = numpoints, kws...) end) |> eval
+    :(($fun)(f::AbstractFit, par1, par2; numpoints=100, sigma=1, kws...) = begin
+        println("usage of numpoints or sigma is deprecated, please use the arguments size and cl, for more info, go check the iminuit python document")
+        f.$fun(par1, par2; cl=sigma, size=numpoints, kws...)
+    end) |> eval
 end
 
 for fun in [:profile, :draw_profile, :mnprofile, :draw_mnprofile]
-  :(($fun)(f::AbstractFit, par1; kws...) = f.$fun(par1; kws...)) |> eval
+    :(($fun)(f::AbstractFit, par1; kws...) = f.$fun(par1; kws...)) |> eval
 end
 #fix for incorrect parameters
-for fun in [:profile, :draw_profile, :mnprofile, :draw_mnprofile]
-  :(($fun)(f::AbstractFit, par1; numpoints = 100, sigma = 1, kws...) = begin println("usage of numpoints or sigma is deprecated, please use the arguments size and cl, for more info, go check the iminuit python document"); f.$fun(par1; cl = sigma, size = numpoints, kws...) end) |> eval
+for fun in [:mnprofile, :draw_mnprofile]
+    :(($fun)(f::AbstractFit, par1; numpoints=100, sigma=1, kws...) = begin
+        println("usage of numpoints or sigma is deprecated, please use the arguments size and cl, for more info, go check the iminuit python document")
+        f.$fun(par1; cl=sigma, size=numpoints, kws...)
+    end) |> eval
+end
+
+for fun in [:profile, :profile]
+    :(($fun)(f::AbstractFit, par; bin = 100, kws...) = begin
+        println("usage of bin is deprecated, please use the arguments size, for more info, go check the iminuit python document")
+        f.$fun(par1; size = bin, kws...)
+    end) |> eval
 end
 
 
 for f in [:migrad, :minos, :hesse, :contour, :mncontour, :profile,
-          :mnprofile, :draw_mncontour, :draw_contour, :draw_profile, :draw_mnprofile]
-  sf = string(f)
-  @eval @doc LazyHelp(mMinuit, $sf) function $f(ars...; kws...)
-    if !hasproperty(mMinuit, $sf)
-      error("iminuit ", iminuit_version, " does not have iminuit.Minuit", $sf)
+    :mnprofile, :draw_mncontour, :draw_contour, :draw_profile, :draw_mnprofile]
+    sf = string(f)
+    @eval @doc LazyHelp(mMinuit, $sf) function $f(ars...; kws...)
+        if !hasproperty(mMinuit, $sf)
+            error("iminuit ", iminuit_version, " does not have iminuit.Minuit", $sf)
+        end
+        return pycall(mMinuit.$sf, PyAny, ars...; kws...)
     end
-    return pycall(mMinuit.$sf, PyAny, ars...; kws...)
-  end
 end
 
 #########################################################################
@@ -373,53 +405,15 @@ to `migrad`, `minos` etc.
 * `start_values` can be either the initial values of parameters (`<: AbstractArray` or `<:Tuple`) or a previous fit of type `AbstractFit`.
 """
 function model_fit(model::Function, data::Data, start_values; kws...)
-  # _model(x, par) = length(func_argnames(model)) > 2 ? model(x, par...) : model(x, par)
-  # println("kwds: ", kws)
-  _chisq(par) = chisq(model, data, par)
-  _fit = Minuit(_chisq, start_values; kws...)
-  return _fit
+    # _model(x, par) = length(func_argnames(model)) > 2 ? model(x, par...) : model(x, par)
+    _chisq(par) = chisq(model, data, par)
+    _fit = Minuit(_chisq, start_values; kws...)
+    return _fit
 end
 function model_fit(model::Function, data::Data, fit::AbstractFit; kws...)
-  # _model(x, par) = length(func_argnames(model)) > 2 ? model(x, par...) : model(x, par)
-  # println("called abf ver")
-  # args = nothing
-  # if haskey(kws, :name)
-  # 	args = kws[:name]
-  # else
-  #   args = func_argnames(model)
-  # end
-  # # println(args)
-  # arg_dict = Dict(x => i for (i, x) in enumerate(args))
-  # len = length(args)
-  # stored_kwds = Dict(str => nothing for str in removed)
-  # new_kwds = Vector()
-  # fitarg_dict = Dict{String, AbstractVector{Union{Float64, Bool, Tuple}}}("error" => [fit.errors...], "limit" => [fit.limits...], "fix" => [fit.fixed...])
-  # for (k, v) in kws
-  #   if v === nothing
-  #     continue
-  #   end
-  #   k_str = String(k)
-  #   if k_str in removed
-  #   	stored_kwds[k_str] = v
-  #     continue
-  #   elseif k_str in fitarg
-  #     fitarg_dict[k_str] = v
-  #     continue
-  #   end
-  #   udscore = findfirst('_', k_str)
-  #   if udscore === nothing
-  #     push!(new_kwds, (k, v))
-  #   	continue
-  #   end
-  #   typ = k_str[1: udscore - 1]
-  #   if typ in fitarg
-  #     para = Symbol(k_str[udscore + 1:end])
-  #     fitarg_dict[typ][arg_dict[para]] = isa(v, Vector) ? Tuple(v) : v
-  #   end
-  # end
-  _chisq(par) = chisq(model, data, par)
-  _fit = Minuit(_chisq, fit; kws...)
-  return _fit
+    _chisq(par) = chisq(model, data, par)
+    _fit = Minuit(_chisq, fit; kws...)
+    return _fit
 end
 
 """
@@ -428,26 +422,27 @@ end
 convenient wrapper for fitting a `model` to `data`; see [`model_fit`](@ref).
 """
 macro model_fit(model, data, start_values, kws...)
-  _expr = quote
-    _chisq(par) = chisq($model, $data, par)
-    _fit = isempty($kws) ? Minuit(_chisq, $start_values) : Minuit(_chisq, $start_values; $(kws...))
-  end
-  esc(_expr)
+    _expr = quote
+        _chisq(par) = chisq($model, $data, par)
+        _fit = isempty($kws) ? Minuit(_chisq, $start_values) : Minuit(_chisq, $start_values; $(kws...))
+    end
+    esc(_expr)
 end
 
-function matrix(f::AbstractFit; correlation = true, skip_fixed = true)
-  if !f.valid
-  	f.migrad()
-  end
-	if skip_fixed == true
-    if correlation == true 
-      return PyObject(f)."covariance".correlation()
-    else
-      error("still don't know how to implement the error matrix!")
+function matrix(f::AbstractFit; correlation=true, skip_fixed=true)
+    @warn("the correlation matrix is replaced by Minuit.covariance.correlation() in the latest version of iminuit, go check it out")
+    if !f.valid
+        f.migrad()
     end
-  else
-    error("the case that skip_fixed is false hasn't been implemented yet!")
-  end
+    if skip_fixed == true
+        if correlation == true
+            return PyObject(f)."covariance".correlation()
+        else
+            return f.covariance
+        end
+    else
+        error("the case that skip_fixed is false hasn't been implemented yet!")
+    end
 end
 
 

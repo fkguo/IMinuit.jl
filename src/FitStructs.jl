@@ -43,7 +43,6 @@ haskey(f::AbstractFit, x) = haskey(PyObject(f), x)
 
 # let the matrix property to be given as an array
 # matrix removed, now using Minuit.covariance.correlation(), might have some problem cause the return type is slightly different
-# also don't understand 
 function Base.getproperty(f::AbstractFit, s::Symbol)
     # use PyObject(f) instead of f to prevent StackOverflowError
     s === :matrix ? matrix(f) : getproperty(PyObject(f), s)
