@@ -160,6 +160,7 @@ function get_contours(fit::ArrayFit, χsq, parameters_combination::Vector{Int}; 
 
     # choose a pair of parameters, and try to compute the MINOS contour of npts points
     para1, para2 = _args[parameters_combination[1]], _args[parameters_combination[2]]
+    # println("*** ",fit, " ***")
     contour_parameters = fit.mncontour(para1, para2, cl=sigma, size=npts)[1:end - 1, :]
 
     # for each contour point, get the values of the other parameters
@@ -174,6 +175,7 @@ function get_contours(fit::ArrayFit, χsq, parameters_combination::Vector{Int}; 
 
         _fit1.strategy = 1
         migrad(_fit1)
+        # println("*** ", _fit1.fval, " ***")
         # filtering only those with χ² in 1σ
         _fit1.fval < fmin_1σ + tol && push!(container, vcat(_fit1.fval, args(_fit1)))
     end

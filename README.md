@@ -4,7 +4,7 @@
 <!-- [![Build Status](https://github.com/fkguo/IMinuit.jl/workflows/CI/badge.svg)](https://github.com/fkguo/IMinuit.jl/actions) -->
 
 Julia wrapper of the Python package [`iminuit`](https://github.com/scikit-hep/iminuit), which is the interface to the C++ MINUIT2, widely used in fitting in the high-energy physics community. 
-Supported `iminuit` versions: 1.5.0-2.0.0
+Supported `iminuit` versions: 2.0.0 or later
 
 The `minuit` object in `iminuit` is defined as an `AbstractFit`:
 if using array parameters, then `ArrayFit`;
