@@ -134,7 +134,9 @@ function Minuit(fcn; kwds...)::Fit
     # println(kwds)
     m = iminuit.Minuit(fcn; new_kwds...)
 
-    m.errors = fitarg_dict["error"]
+    if !all(fitarg_dict["error"] .== 0.0)
+        m.errors = fitarg_dict["error"]
+    end
     m.limits = fitarg_dict["limit"]
     m.fixed = fitarg_dict["fix"]
 
@@ -157,12 +159,14 @@ function Minuit(fcn, start::AbstractVector; kwds...)::ArrayFit
             kwds = [:name => name, kwds...]
         end
         # println(kwds)
-        new_kwds, stored_kwds, foo = preprocess(fcn; kwds...)
+        new_kwds, stored_kwds, fitarg_dict = preprocess(fcn; kwds...)
         m = iminuit.Minuit(fcn, start; new_kwds...)
 
-        m.errors = foo["error"]
-        m.limits = foo["limit"]
-        m.fixed = foo["fix"]
+        if !all(fitarg_dict["error"] .== 0.0)
+            m.errors = fitarg_dict["error"]
+        end
+        m.limits = fitarg_dict["limit"]
+        m.fixed = fitarg_dict["fix"]
 
         for sym in removed
             if haskey(stored_kwds, sym)
@@ -178,12 +182,14 @@ function Minuit(fcn, start::Tuple; kwds...)::ArrayFit
     if isempty(kwds)
         m = iminuit.Minuit(fcn, start)
     else
-        new_kwds, stored_kwds, foo = preprocess(fcn; kwds...)
+        new_kwds, stored_kwds, fitarg_dict = preprocess(fcn; kwds...)
         m = iminuit.Minuit(fcn, start; new_kwds...)
 
-        m.errors = foo["error"]
-        m.limits = foo["limit"]
-        m.fixed = foo["fix"]
+        if !all(fitarg_dict["error"] .== 0.0)
+            m.errors = fitarg_dict["error"]
+        end
+        m.limits = fitarg_dict["limit"]
+        m.fixed = fitarg_dict["fix"]
 
         for sym in removed
             if haskey(stored_kwds, sym)
@@ -199,8 +205,10 @@ function Minuit(fcn, m::AbstractFit; kwds...)
     new_kwds, stored_kwds, ini_value, fitarg_dict = preprocess(fcn, m; kwds...)
     _m::ArrayFit = Minuit(fcn, ini_value; new_kwds...)
 
+    if !all(fitarg_dict["error"] .== 0.0)
+        _m.errors = fitarg_dict["error"]
+    end
     _m.limits = fitarg_dict["limit"]
-    _m.errors = fitarg_dict["error"]
     _m.fixed = fitarg_dict["fix"]
 
     for sym in removed
@@ -343,7 +351,6 @@ function matrix(f::AbstractFit; correlation=false, skip_fixed=true)
         if correlation == true
             return PyObject(f)."covariance".correlation()
         else
-            f.hesse()
             return f.covariance
         end
     else

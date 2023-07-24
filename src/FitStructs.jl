@@ -47,5 +47,3 @@ function Base.getproperty(f::AbstractFit, s::AbstractString)
     s === "matrix" ? matrix(f) : getproperty(PyObject(f), s)
 end
 
-const pycopy = PyNULL()
-Base.copy(fit::T) where {T <: AbstractFit} = T(pycopy.copy(PyObject(fit)))
