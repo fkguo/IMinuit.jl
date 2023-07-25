@@ -7,7 +7,6 @@ function preprocess(fcn; kwds...)
     else
         args = func_argnames(fcn)
     end
-    # println("args ",args, "args")
     arg_dict = Dict(x => i for (i, x) in enumerate(args))
     len = length(args)
     stored_kwds = Dict{String,Any}()
@@ -23,7 +22,10 @@ function preprocess(fcn; kwds...)
             continue
         end
         k_str = String(k)
-        if k_str in removed
+        if Symbol(k_str) in args
+            push!(new_kwds, (k, v))
+            continue
+        elseif k_str in removed
             stored_kwds[k_str] = v
             continue
         elseif k_str in fitarg

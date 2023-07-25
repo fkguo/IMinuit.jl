@@ -131,7 +131,7 @@ From `iminuit`:
 function Minuit(fcn; kwds...)::Fit
     removed = ["errordef", "throw_nan", "print_level", "use_array_call"]
     new_kwds, stored_kwds, fitarg_dict = preprocess(fcn; kwds...)
-    # println(kwds)
+    # println(new_kwds)
     m = iminuit.Minuit(fcn; new_kwds...)
 
     if !all(fitarg_dict["error"] .== 0.0)
