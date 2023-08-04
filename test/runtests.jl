@@ -1,5 +1,5 @@
+using IMinuit: parallel_fit
 using Pkg
-Pkg.develop(path = "/home/akizuki/IMinuit.jl")
 using IMinuit
 using Test
 # using DataFrames, CSV
@@ -10,6 +10,7 @@ using Test
 
     f1(x, y, z) = x^2 + (y-1)^2 + (z-2)^4
     m1 = Minuit(f1, x = 1, y = 1, z = 0)
+    pf(x, a, b) = a*x + b
 @testset "minimizing simple functions: " begin
     f(x) = x[1]^2 + (x[2]-1)^2 + (x[3]-2)^4
     m = Minuit(f, [1,1,0])
@@ -26,6 +27,9 @@ using Test
 
     @test length(get_contours_all(m, f, npts = 3)) == 19
     @test length(get_contours_all(m1, f1, npts = 3)) == 19
+    data = Data([1, 2, 3], [2, 3, 4], [0.2, 1.2, 0.003])
+    @test parallel_fit(12, pf, data, LinRange(-1, 1, 3), 300)
+
 end
 #
 # @testset "a simple but realistic fit: " begin
