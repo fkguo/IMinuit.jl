@@ -18,6 +18,7 @@ export matrix
 export get_contours, get_contours_all, contour_df, get_contours_given_parameter
 export contour_df_given_parameter, get_contours_samples, contour_df_samples
 export reset
+export chi2, poisson_chi2, multinominal_chi2
 
 # copied from PyPlot.jl
 # that lazily looks up help from a PyObject via zero or more keys.
@@ -304,6 +305,16 @@ for f in [:migrad, :minos, :hesse, :contour, :mncontour, :profile,
     end
 end
 
+for f in [:chi2, :multinominal_chi2, :poisson_chi2]
+    sf = string(f)
+    @eval @doc LazyHelp(cost, $sf) function $f(ars...; kws...)
+        if !hasproperty(cost, $sf)
+            error("iminuit ", iminuit_version, " does not have iminuit.cost", $sf)
+        end
+        return pycall(cost.$sf, PyAny, ars...; kws...)
+    end
+end
+
 #########################################################################
 
 include("Data.jl")
@@ -360,6 +371,5 @@ function matrix(f::AbstractFit; correlation=false, skip_fixed=true)
     end
 end
 
-include("parallel_fit.jl")
 
 end
