@@ -25,6 +25,7 @@ makedocs(;
         "chisq and model_fit" => "modelfit.md",
         "Error analysis" => "contour.md"
     ],
+    doctest = false,
 )
 
 deploydocs(;

@@ -78,7 +78,7 @@ f.scan(ncall)
 f.scipy(kws...)
 f.simplex(ncall)
 ```
-> `scipy` method need the corresponding python package to be installed in the enviroment that `PyCall.jl` was linked to
+> `scipy` method needs the corresponding python package to be installed in the enviroment that `PyCall.jl` was linked to
 ```@example 1
 @doc scan
 ```

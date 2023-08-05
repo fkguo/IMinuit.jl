@@ -10,7 +10,7 @@ The `minuit` object in `iminuit` is defined as an `AbstractFit`:
 if using array parameters, then `ArrayFit`;
 if using individual parameters, then `Fit`.
 
-Install by `]add https://github.com/YtihalX/IMinuit.jl`
+Install by `]add https://github.com/fkguo/IMinuit.jl`
 
 For functions defined, click [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://fkguo.github.io/IMinuit.jl/dev)
 
