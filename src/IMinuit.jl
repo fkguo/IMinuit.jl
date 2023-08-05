@@ -19,6 +19,7 @@ export get_contours, get_contours_all, contour_df, get_contours_given_parameter
 export contour_df_given_parameter, get_contours_samples, contour_df_samples
 export reset
 export chi2, poisson_chi2, multinominal_chi2
+export scipy, simplex, scan, draw_mnmatrix
 
 # copied from PyPlot.jl
 # that lazily looks up help from a PyObject via zero or more keys.
@@ -269,13 +270,12 @@ end
 mncontour(f::AbstractFit, par1, par2; numpoints=100, sigma=nothing, kws...) = f.mncontour(par1, par2; cl = sigma, size = numpoints, kws...)
 draw_mncontour(f::AbstractFit, par1, par2; numpoints=100, nsigma=nothing, kws...) = f.draw_mncontour(par1, par2; cl = nsigma, size = numpoints, kws...)
 
-# for fun in [:profile, :draw_profile, :mnprofile, :draw_mnprofile]
-#     :(($fun)(f::AbstractFit, par1; kws...) = f.$fun(par1; kws...)) |> eval
-# end
+for fun in [:scan, :simplex]
+    :(($fun)(f::AbstractFit, par1; kws...) = f.$fun(par1; kws...)) |> eval
+end
 #fix for incorrect parameters
 for fun in [:mnprofile, :draw_mnprofile]
     :(($fun)(f::AbstractFit, par; bins = 30, kws...) = begin
-        # println("usage of numpoints or sigma is deprecated, please use the arguments size and cl, for more info, go check the iminuit python document")
         f.$fun(par; size = bins, kws...)
     end) |> eval
 end
@@ -293,9 +293,15 @@ for fun in [:contour, :draw_contour]
     end) |> eval
 end
 
+for fun in [:scipy, :draw_mnmatrix]
+    :(($fun)(f::AbstractFit; kws...) = begin
+        f.$fun(kws...)
+    end) |> eval
+end
+
 
 for f in [:migrad, :minos, :hesse, :contour, :mncontour, :profile,
-    :mnprofile, :draw_mncontour, :draw_contour, :draw_profile, :draw_mnprofile]
+    :mnprofile, :draw_mncontour, :draw_contour, :draw_profile, :draw_mnprofile, :scan, :simplex, :scipy, :draw_mnmatrix]
     sf = string(f)
     @eval @doc LazyHelp(mMinuit, $sf) function $f(ars...; kws...)
         if !hasproperty(mMinuit, $sf)
