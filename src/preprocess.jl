@@ -3,7 +3,7 @@ function preprocess(fcn; kwds...)
     fitarg = ["error", "fix", "limit"]
     removed = ["errordef", "throw_nan", "print_level", "use_array_call"]
     if haskey(kwds, :name)
-        args = kwds[:name]
+        args = Symbol.(kwds[:name])
     else
         args = func_argnames(fcn)
     end
@@ -51,7 +51,7 @@ function preprocess(fcn, fit::AbstractFit; kwds...)
     fitarg = ["error", "fix", "limit"]
     removed = ["errordef", "throw_nan", "print_level", "use_array_call"]
     if haskey(kwds, :name)
-        args = kwds[:name]
+        args = Symbol.(kwds[:name])
     else
         args = Symbol.(fit.parameters)
     end

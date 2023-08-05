@@ -15,6 +15,23 @@ Julia wrapper of the Python package [`iminuit`](https://github.com/scikit-hep/im
 ```@index
 ```
 
-```@autodocs
-Modules = [IMinuit]
-``` 
+```@docs
+IMinuit.ArrayFit
+IMinuit.Data
+IMinuit.Fit
+IMinuit.Minuit
+IMinuit.chisq
+IMinuit.contour_df
+IMinuit.contour_df_given_parameter
+IMinuit.contour_df_samples
+IMinuit.func_argnames
+IMinuit.get_contours
+IMinuit.get_contours_all
+IMinuit.get_contours_given_parameter
+IMinuit.get_contours_samples
+IMinuit.method_argnames
+IMinuit.model_fit
+IMinuit.@model_fit
+IMinuit.@plt_best
+IMinuit.@plt_data  
+```

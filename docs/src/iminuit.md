@@ -71,7 +71,23 @@ matrix(f::AbstractFit; kws...)
 ```
 return error or correlation matrix (set the keyword `correlation = true`).
 
-
+### Other algorithms that can be used to minimize
+For a fit `f`, 
+```
+f.scan(ncall)
+f.scipy(kws...)
+f.simplex(ncall)
+```
+> `scipy` method need the corresponding python package to be installed in the enviroment that `PyCall.jl` was linked to
+```@example 1
+@doc scan
+```
+```@example 1
+@doc scipy
+```
+```@example 1
+@doc simplex
+```
 
 ##  Some other useful `iminuit` functions
 

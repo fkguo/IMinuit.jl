@@ -33,16 +33,7 @@ struct LazyHelp
     LazyHelp(o, k1::AbstractString, k2::AbstractString) = new(o, (k1, k2))
     LazyHelp(o, k::Tuple{Vararg{AbstractString}}) = new(o, k)
 end
-# function show(io::IO, ::MIME"text/plain", h::LazyHelp)
-# 	o = h.o
-#   for k in h.keys
-#   	o = getproperty(o, k)
-#   end
-#   if hasproperty(o, "__doc__")
-#   	print(io, "Docstring pulled from the Python `iminuit`:\n\n")
-#     print(io, convert(AbstractString, o.))
-#   end
-# end
+
 function show(io::IO, ::MIME"text/plain", h::LazyHelp)
     o = h.o
     for k in h.keys
@@ -56,7 +47,7 @@ function show(io::IO, ::MIME"text/plain", h::LazyHelp)
     end
 end
 
-Base.show(io::IO, h::LazyHelp) = show(io, "text/plain", h)
+Base.show(io::IO, h::LazyHelp) = show(io, MIME"text/plain"(), h)
 function Base.Docs.catdoc(hs::LazyHelp...)
     Base.Docs.Text() do io
         for h in hs
