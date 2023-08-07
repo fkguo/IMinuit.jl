@@ -1,4 +1,3 @@
-# in order to be compatible with legacy usage, it's tons of work :(
 function preprocess(fcn; kwds...)
     fitarg = ["error", "fix", "limit"]
     removed = ["errordef", "throw_nan", "print_level", "use_array_call"]
