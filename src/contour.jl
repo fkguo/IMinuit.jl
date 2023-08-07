@@ -41,7 +41,7 @@ function get_contours(fit::Fit, χsq, parameters_combination::Vector{Int}; npts:
     # setting the parameters to the the best ones from the previous fit
     _fixed = fit.fixed
     narg = length(_fixed)
-    _limits = collect(fit.limits[i] for i in 1:narg)
+    _limits = [fit.limits...]
     _args = Symbol.(fit.parameters) #  func_argnames(χsq)
     @views for i in 1:length(_args)    # reset the limits of parameters to be the bounds from minos
         if !_fixed[i]
@@ -118,7 +118,7 @@ function get_contours(fit::ArrayFit, χsq, parameters_combination::Vector{Int}; 
     start_array = args(fit) #PyVector{Real}(fit.args) # does not support assignment
     _fixed = fit.fixed
     nargs = length(_fixed)
-    _limits = collect(fit.limits[i] for i in 1:nargs)
+    _limits = [fit.limits...]
     _args = Symbol.(fit.parameters) # get names of parameters
     @views for i in 1:nargs    # reset the limits of parameters to be the bounds from minos
         if !_fixed[i]
@@ -244,7 +244,7 @@ function get_contours_given_parameter(fit::Fit, χsq, para::T, range) where {T<:
     _args = Symbol.(fit.parameters) #  func_argnames(χsq)
     _fixed = fit.fixed
     nargs = length(_args)
-    _limits = collect(fit.limits[i] for i in 1:nargs)
+    _limits = [fit.limits...]
     @views for i in 1:length(_args)    # reset the limits of parameters to be the bounds from minos
         if !_fixed[i]
             _limits[i] = fit.values[i] .+
@@ -282,7 +282,7 @@ function get_contours_given_parameter(fit::ArrayFit, χsq, para::T, range) where
     _args = Symbol.(fit.parameters)
     _fixed = fit.fixed
     nargs = length(_args)
-    _limits = collect(fit.limits[i] for i in 1:nargs)
+    _limits = [fit.limits...]
     @views for i in 1:nargs    # reset the limits of parameters to be the bounds from minos
         if !_fixed[i]
             _limits[i] = fit.values[i] .+
@@ -353,7 +353,7 @@ function get_contours_samples(fit::Fit, χsq, paras, ranges; nsamples=100, MNbou
     _args = Symbol.(fit.parameters)
     _fixed = fit.fixed
     nargs = length(_args)
-    _limits = collect(fit.limits[i] for i in 1:nargs)
+    _limits = [fit.limits...]
     ini_value = (_args[i] => fit.values[i] for i in 1:nargs)
     if MNbounds
         @views for i in 1:length(_args)    # reset the limits of parameters to be the bounds from minos
@@ -424,7 +424,7 @@ function get_contours_samples(fit::ArrayFit, χsq, paras, ranges; nsamples=100, 
     # println(_args)
     _fixed = fit.fixed
     nargs = length(_args)
-    _limits = collect(fit.limits for i in 1:nargs)
+    _limits = [fit.limits...]
     if MNbounds
         @views for i in 1:length(_args)    # reset the limits of parameters to be the bounds from minos
             if !_fixed[i]
