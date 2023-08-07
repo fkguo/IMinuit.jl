@@ -9,7 +9,7 @@ using IMinuit
 
 makedocs(;
     modules=[IMinuit],
-    authors="Feng-Kun Guo",
+    authors="Feng-Kun Guo, Yu Zhang",
     repo="https://github.com/fkguo/IMinuit.jl/blob/{commit}{path}#L{line}",
     sitename="IMinuit.jl",
     format=Documenter.HTML(;
@@ -29,9 +29,10 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/fkguo/IMinuit.jl",
+    repo="github.com/fkguo/IMinuit.jl.git",
     target = "build",
     deps = nothing,
     make = nothing,
-    branch = "gh-pages"
+    branch = "gh-pages",
+    push_preview = true,
 )
