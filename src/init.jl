@@ -1,4 +1,5 @@
 # IMinuit initialization
+using PyCall:@py_str
 
 const iminuit = PyNULL()
 const mMinuit = PyNULL()
@@ -10,6 +11,32 @@ const cost = PyNULL()
 # if PyCall is configured to use the Julia-specific Python, then iminuit
 # can be automatically installed by pyimport_conda.
 function __init__()
+    py"""
+    def check_package_installed(package_name):
+        try:
+            __import__(package_name)
+            return True
+        except ImportError:
+            return False
+    """
+
+    if !py"check_package_installed('iminuit')"
+    	println("iminuit not installed on the target python, install it? ([Y]/n)")
+        buf = readline()
+        while buf != "y" && buf != "Y" && buf != ""
+        	if buf == "n" || buf == "N"
+                println("Selected not to install, aborting")
+                exit()
+            else
+                println("Input \"$buf\" not supported")
+                println("iminuit not installed on the target python, install it? ([Y]/n)")
+            end
+            buf = readline()
+        end
+        run(`conda install iminuit`) # this updates the sys. conda, not the julia one.
+        println("The iminuit has been successfully updated, quiting the process, please start again to refresh the environment")
+        exit()
+    end
     copy!(iminuit, pyimport_conda("iminuit", "iminuit"))
     _version = iminuit.__version__
     if (_version < "2.0")
@@ -38,5 +65,4 @@ function __init__()
     # The following converts the ArgsView type to Vector{Float64}, but takes too much time
     # it takes more than 50 μs
     # pytype_mapping(minuit._libiminuit.ArgsView, Vector{Float64})
-    println("initiated!!")
 end
