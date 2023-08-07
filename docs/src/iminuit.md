@@ -22,9 +22,8 @@ migrad, minos, hesse, matrix
 ```
 wrappers of `iminuit.Minuit.migrad`, `iminuit.Minuit.minos`, `iminuit.Minuit.hesse`, `iminuit.Minuit.matrix`.
 
-
 ```
-migrad(f::AbstractFit; ncall = 1000, resume = true, nsplit = 1, precision = nothing)
+migrad(f::AbstractFit; ncall = nothing, resume = true, precision = nothing)
 ```
 minimizing using `MIGRAD`. Further information (docstring from `iminuit`) can be found by
 ```@example 1
@@ -41,7 +40,7 @@ for f in [:migrad, :minos, :hesse, :contour, :mncontour, :profile, :mnprofile] #
 end # hide
 @doc migrad
 ```
-
+Note that the python package doesn't provide parameters like `resume` and `precision`, for which are implemented in this julia package.
 
 ```
 hesse(f::AbstractFit; maxcall = 0)
@@ -72,7 +71,23 @@ matrix(f::AbstractFit; kws...)
 ```
 return error or correlation matrix (set the keyword `correlation = true`).
 
-
+### Other algorithms that can be used to minimize
+For a fit `f`, 
+```
+f.scan(ncall)
+f.scipy(kws...)
+f.simplex(ncall)
+```
+> `scipy` method needs the corresponding python package to be installed in the enviroment that `PyCall.jl` was linked to
+```@example 1
+@doc scan
+```
+```@example 1
+@doc scipy
+```
+```@example 1
+@doc simplex
+```
 
 ##  Some other useful `iminuit` functions
 

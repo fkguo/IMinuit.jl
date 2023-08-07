@@ -40,8 +40,9 @@ haskey(f::AbstractFit, x) = haskey(PyObject(f), x)
 # let the matrix property to be given as an array
 function Base.getproperty(f::AbstractFit, s::Symbol)
     # use PyObject(f) instead of f to prevent StackOverflowError
-    s === :matrix ? pycall(PyObject(f).matrix, PyAny) : getproperty(PyObject(f), s)
+    s === :matrix ? matrix(f) : getproperty(PyObject(f), s)
 end
 function Base.getproperty(f::AbstractFit, s::AbstractString)
-    s === "matrix" ? pycall(PyObject(f).matrix, PyAny) : getproperty(PyObject(f), s)
+    s === "matrix" ? matrix(f) : getproperty(PyObject(f), s)
 end
+
