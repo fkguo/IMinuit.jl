@@ -11,6 +11,7 @@ if using array parameters, then `ArrayFit`;
 if using individual parameters, then `Fit`.
 
 Install by `]add https://github.com/fkguo/IMinuit.jl`
+> Remember to point your `pycall` to the python enviroment which has `iminuit` installed, and then build your `pycall`, for more information, go check [PyCall](https://github.com/JuliaPy/PyCall.jl)
 
 For functions defined, click [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://fkguo.github.io/IMinuit.jl/dev)
 
