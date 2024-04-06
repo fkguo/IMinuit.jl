@@ -411,7 +411,7 @@ function get_contours_samples(fit::ArrayFit, χsq, paras, ranges; nsamples=100, 
     start_array = args(fit)
     _args = Symbol.(fit.parameters)
     if _args[1] != :x0
-        if isa(paras, Tuple)
+        if isa(paras, Tuple) || isa(paras, Vector)
             let para = String(paras[1])
             	if para[1] == 'x' && isascii(para[end])
                 	paras = collect(_args[parse(Int, String(paras[i])[2:end]) + 1] for i in eachindex(paras))
