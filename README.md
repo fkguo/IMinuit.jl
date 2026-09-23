@@ -3,6 +3,8 @@
 <!-- [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://fkguo.github.io/IMinuit.jl/stable) -->
 <!-- [![Build Status](https://github.com/fkguo/IMinuit.jl/workflows/CI/badge.svg)](https://github.com/fkguo/IMinuit.jl/actions) -->
 
+**Stopped maintaining, superseded by the pure Julia version [`NativeMinuit`](https://github.com/fkguo/NativeMinuit.jl)**
+
 Julia wrapper of the Python package [`iminuit`](https://github.com/scikit-hep/iminuit), which is the interface to the C++ MINUIT2, widely used in fitting in the high-energy physics community. 
 Supported `iminuit` versions: 2.0.0 or later
 
